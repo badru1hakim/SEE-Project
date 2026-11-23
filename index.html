@@ -18,9 +18,11 @@
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
 body{
-  margin:0; background:var(--board); color:var(--ink);
-  font:500 18px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
-  }
+  margin:0; color:var(--ink);
+  font:500 16px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
+  background: var(--board) url("bg.jpg") center / cover fixed no-repeat;
+  min-height:100vh;
+}
 header{
   background:var(--mask); color:var(--silk); display:flex; align-items:center;
   gap:14px; padding:12px clamp(16px,4vw,40px); border-bottom:4px solid var(--gold); flex-wrap:wrap;
