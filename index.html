@@ -12,6 +12,7 @@
 :root{
   --mask:#0E4A3C; --mask-dk:#0A3A2F; --gold:#C8A24A; --silk:#F4F6F2;
   --board:#DCE6E1; --ink:#101B1A; --muted:#5A6B66; --line:#B9C9C2; --err:#A62B2B; --ok:#1A6B42;
+  --series:#D97706; --parallel:#0D9488;
   box-sizing:border-box;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -57,7 +58,7 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 #authmsg,#msg{min-height:1.4em; margin:0; font-size:.95rem}
 
 /* Dashboard Layout */
-.layout{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px; align-items:start}
+.layout{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; align-items:start}
 .stage{
   position:relative; background:#050B0A; border:2px solid var(--mask);
   border-radius:4px; aspect-ratio:16/9; overflow:hidden;
@@ -74,6 +75,32 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 .row>*{flex:1}
 .rail{display:grid; gap:14px}
 .rail h2,.gal h2{margin:0 0 8px; font-size:1.1rem}
+
+/* Circuit Topology Verdict Banner */
+.circuit-box{
+  border:2px solid var(--line); border-radius:4px; padding:12px 14px;
+  background:#fff; margin-bottom:12px; transition:border-color .2s, background .2s;
+}
+.circuit-box .eyebrow{
+  font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+}
+.circuit-box .verdict{
+  font-size:1.45rem; font-weight:700; line-height:1.15; margin:3px 0 4px; color:var(--ink);
+}
+.circuit-box .detail{font-size:.88rem; color:var(--muted)}
+.circuit-box.series{border-color:var(--series); background:#FFFBEB}
+.circuit-box.series .verdict{color:#B45309}
+.circuit-box.parallel{border-color:var(--parallel); background:#F0FDFA}
+.circuit-box.parallel .verdict{color:#0F766E}
+
+.pill{
+  display:inline-block; padding:2px 8px; border-radius:3px;
+  font-size:.78rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+}
+.pill.series{background:#FEF3C7; color:#92400E; border:1px solid #F59E0B}
+.pill.parallel{background:#CCFBF1; color:#115E59; border:1px solid #14B8A6}
+.pill.unknown{background:#E5ECE8; color:var(--muted); border:1px solid var(--line)}
+
 .meta-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px}
 .stat{background:#fff; border:1px solid var(--line); border-radius:4px; padding:8px 10px}
 .stat span{display:block; font-size:.8rem; color:var(--muted)}
@@ -88,7 +115,7 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 /* History Gallery */
 .gal{margin-top:28px}
 .gal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
-#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px}
+#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px}
 figure{
   margin:0; background:var(--silk); border:2px solid var(--mask);
   border-radius:4px; overflow:hidden; display:flex; flex-direction:column;
@@ -171,6 +198,14 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 
         <div class="panel">
           <h2>Detection Dashboard</h2>
+
+          <!-- SERIES / PARALLEL CLASSIFICATION DISPLAY -->
+          <div id="circuit-box" class="circuit-box">
+            <div class="eyebrow">Circuit Type</div>
+            <div id="circuit-verdict" class="verdict">Waiting for circuit…</div>
+            <div id="circuit-detail" class="detail">Place at least 2 components in view</div>
+          </div>
+
           <div class="meta-grid">
             <div class="stat">
               <span>Account</span>
@@ -239,12 +274,145 @@ let stream = null;
 let running = false;
 let mode = "idle";
 let last = { preds: [], w: 640, h: 360 };
+let lastCircuit = { kind: "unknown", label: "Waiting for circuit…", detail: "Place at least 2 components in view" };
 
 const displayName = u => (u && u.user_metadata && u.user_metadata.full_name) ? u.user_metadata.full_name : (u ? u.email : "Guest");
 
+/* ---------- SERIES vs PARALLEL TOPOLOGY LOGIC ---------- */
+function classifyCircuit(preds, imgW, imgH) {
+  if (!preds || preds.length === 0) {
+    return { kind: "unknown", label: "No Circuit Detected", detail: "Point camera at circuit components" };
+  }
+
+  // 1. Direct label check (if model directly outputs 'series' or 'parallel' classes)
+  const directSeries = preds.find(p => p.class.toLowerCase().includes("series"));
+  const directParallel = preds.find(p => p.class.toLowerCase().includes("parallel"));
+  if (directSeries && (!directParallel || directSeries.confidence >= directParallel.confidence)) {
+    return {
+      kind: "series",
+      label: "SERIES CIRCUIT",
+      detail: `Model classified as Series (${Math.round(directSeries.confidence * 100)}% conf)`
+    };
+  }
+  if (directParallel) {
+    return {
+      kind: "parallel",
+      label: "PARALLEL CIRCUIT",
+      detail: `Model classified as Parallel (${Math.round(directParallel.confidence * 100)}% conf)`
+    };
+  }
+
+  // 2. Geometric topology check for >= 2 individual components
+  if (preds.length < 2) {
+    return {
+      kind: "unknown",
+      label: "Incomplete Circuit",
+      detail: `${preds.length}/2 components detected — need at least 2`
+    };
+  }
+
+  const comps = preds.map(p => ({
+    cls: p.class,
+    cx: p.x,
+    cy: p.y,
+    x1: p.x - p.width / 2,
+    y1: p.y - p.height / 2,
+    x2: p.x + p.width / 2,
+    y2: p.y + p.height / 2,
+    w: p.width,
+    h: p.height
+  }));
+
+  // Count component types for readable summary
+  const counts = {};
+  comps.forEach(c => { counts[c.cls] = (counts[c.cls] || 0) + 1; });
+  const summary = Object.entries(counts).map(([k, n]) => `${n} ${k}`).join(", ");
+
+  // Special case: exactly 2 components
+  if (comps.length === 2) {
+    const [a, b] = comps;
+    const dx = Math.abs(a.cx - b.cx);
+    const dy = Math.abs(a.cy - b.cy);
+    const overlapX = Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1);
+    const minW = Math.max(1, Math.min(a.w, b.w));
+
+    // Stacked on separate rows with horizontal overlap -> Parallel
+    if (overlapX > 0.4 * minW || dy > dx * 1.15) {
+      return {
+        kind: "parallel",
+        label: "PARALLEL CIRCUIT",
+        detail: `2 parallel branches (${summary})`
+      };
+    }
+    return {
+      kind: "series",
+      label: "SERIES CIRCUIT",
+      detail: `End-to-end chain (${summary})`
+    };
+  }
+
+  // General case: N >= 3 components
+  const byX = [...comps].sort((a, b) => a.cx - b.cx);
+  let hasParallelStack = false;
+  for (let i = 0; i < byX.length - 1; i++) {
+    const a = byX[i], b = byX[i + 1];
+    const overlapX = Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1);
+    const minW = Math.max(1, Math.min(a.w, b.w));
+    if (overlapX > 0.45 * minW) {
+      hasParallelStack = true;
+      break;
+    }
+  }
+
+  if (!hasParallelStack) {
+    return {
+      kind: "series",
+      label: "SERIES CIRCUIT",
+      detail: `${comps.length} components in series (${summary})`
+    };
+  }
+
+  // Group into horizontal rows to count parallel branches
+  const byY = [...comps].sort((a, b) => a.cy - b.cy);
+  const rowTol = Math.max(30, (imgH || 360) * 0.1);
+  const rows = [[byY[0]]];
+  for (let i = 1; i < byY.length; i++) {
+    const lastRow = rows[rows.length - 1];
+    if (Math.abs(byY[i].cy - lastRow[0].cy) < rowTol) {
+      lastRow.push(byY[i]);
+    } else {
+      rows.push([byY[i]]);
+    }
+  }
+
+  return {
+    kind: "parallel",
+    label: "PARALLEL CIRCUIT",
+    detail: `${rows.length} parallel branches (${summary})`
+  };
+}
+
 /* ---------- DRAWING & DASHBOARD ---------- */
-function drawBoxes(c, preds, sx, sy) {
+function drawBoxes(c, preds, sx, sy, circuit) {
   const s = Math.max(1, c.canvas.width / 640);
+
+  // Subtle connecting line between component centers when classified
+  if (preds.length >= 2 && (circuit.kind === "series" || circuit.kind === "parallel")) {
+    const sorted = [...preds].sort((a, b) => circuit.kind === "series" ? a.x - b.x : a.y - b.y);
+    c.save();
+    c.strokeStyle = circuit.kind === "series" ? "rgba(245,158,11,0.85)" : "rgba(20,184,166,0.85)";
+    c.lineWidth = 2.5 * s;
+    c.setLineDash([6 * s, 5 * s]);
+    c.beginPath();
+    sorted.forEach((p, idx) => {
+      const px = p.x * sx, py = p.y * sy;
+      if (idx === 0) c.moveTo(px, py); else c.lineTo(px, py);
+    });
+    c.stroke();
+    c.restore();
+  }
+
+  // Component bounding boxes
   c.lineWidth = 2.5 * s;
   c.font = `600 ${14 * s}px "Barlow Semi Condensed",sans-serif`;
   c.textBaseline = "middle";
@@ -265,11 +433,36 @@ function drawBoxes(c, preds, sx, sy) {
     c.fillStyle = "#101B1A";
     c.fillText(label, x + 5 * s, ty + th / 2);
   }
+
+  // Top-left live Circuit Type badge on canvas
+  if (circuit && circuit.kind !== "unknown") {
+    const badgeBg = circuit.kind === "series" ? "rgba(217,119,6,0.92)" : "rgba(13,148,136,0.92)";
+    const text = `CIRCUIT: ${circuit.label}`;
+    c.font = `700 ${16 * s}px "Barlow Semi Condensed",sans-serif`;
+    const tw = c.measureText(text).width + 20 * s;
+    const th = 28 * s;
+    c.fillStyle = badgeBg;
+    c.fillRect(10 * s, 10 * s, tw, th);
+    c.fillStyle = "#FFFFFF";
+    c.fillText(text, 20 * s, 10 * s + th / 2);
+  }
+}
+
+function updateCircuitUI(circuit) {
+  const box = $("circuit-box");
+  box.className = "circuit-box" + (circuit.kind === "series" ? " series" : circuit.kind === "parallel" ? " parallel" : "");
+  $("circuit-verdict").textContent = circuit.label;
+  $("circuit-detail").textContent = circuit.detail;
 }
 
 function paint() {
+  lastCircuit = mode === "idle"
+    ? { kind: "unknown", label: "Waiting for circuit…", detail: "Place at least 2 components in view" }
+    : classifyCircuit(last.preds, last.w, last.h);
+
+  updateCircuitUI(lastCircuit);
   octx.clearRect(0, 0, overlay.width, overlay.height);
-  drawBoxes(octx, last.preds, overlay.width / last.w, overlay.height / last.h);
+  drawBoxes(octx, last.preds, overlay.width / last.w, overlay.height / last.h, lastCircuit);
 
   if (!last.preds.length) {
     $("dash-acc").textContent = "—";
@@ -308,7 +501,7 @@ async function inferBase64(b64, fallbackW, fallbackH) {
 async function startCam() {
   say("msg", "");
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    return say("status", "Camera API unavailable. Open this file via http://localhost or https:// (not file://).", "err");
+    return say("status", "Camera API unavailable. Open this file via http://localhost or https://.", "err");
   }
 
   say("status", "Requesting camera permission…");
@@ -383,7 +576,7 @@ async function loop() {
       last = res;
       paint();
       const fps = Math.max(1, Math.round(1000 / (performance.now() - t0)));
-      say("status", `${last.preds.length} component(s) detected · ${fps} fps`);
+      say("status", `${lastCircuit.label} · ${last.preds.length} component(s) · ${fps} fps`);
     } catch (e) {
       say("status", "Roboflow error: " + e.message, "err");
       await sleep(2000);
@@ -425,7 +618,7 @@ async function handleUpload(file) {
   try {
     last = await inferBase64(b64, grab.width, grab.height);
     paint();
-    say("status", `Photo analyzed · ${last.preds.length} component(s) detected`, "ok");
+    say("status", `${lastCircuit.label} · ${last.preds.length} component(s) detected`, "ok");
   } catch (e) {
     last.preds = [];
     paint();
@@ -449,15 +642,17 @@ async function snap() {
   x.drawImage(src, 0, 0, w, h);
 
   const preds = last.preds.slice();
-  drawBoxes(x, preds, w / last.w, h / last.h);
+  const circuit = classifyCircuit(preds, last.w, last.h);
+  drawBoxes(x, preds, w / last.w, h / last.h, circuit);
 
-  const barH = Math.max(28, Math.round(h * 0.055));
-  x.fillStyle = "rgba(14,74,60,0.85)";
+  // Proof watermark bar with Circuit Type + User Name + Timestamp
+  const barH = Math.max(30, Math.round(h * 0.058));
+  x.fillStyle = "rgba(14,74,60,0.88)";
   x.fillRect(0, h - barH, w, barH);
   x.fillStyle = "#F4F6F2";
-  x.font = `600 ${Math.round(barH * 0.55)}px "Barlow Semi Condensed",sans-serif`;
+  x.font = `600 ${Math.round(barH * 0.54)}px "Barlow Semi Condensed",sans-serif`;
   x.textBaseline = "middle";
-  x.fillText(`PROOF · ${displayName(user)} · ${new Date().toLocaleString()}`, 12, h - barH / 2);
+  x.fillText(`PROOF · ${circuit.label} · ${displayName(user)} · ${new Date().toLocaleString()}`, 12, h - barH / 2);
 
   const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
   const path = `${user.id}/${Date.now()}.jpg`;
@@ -465,21 +660,28 @@ async function snap() {
   $("snap").disabled = true;
   say("msg", "Saving proof to Supabase…");
 
+  const payload = {
+    circuit_kind: circuit.kind,
+    circuit_type: circuit.label,
+    circuit_detail: circuit.detail,
+    items: preds.map(p => ({
+      class: p.class,
+      confidence: p.confidence,
+      x: p.x, y: p.y, width: p.width, height: p.height
+    }))
+  };
+
   let { error } = await sb.storage.from(CFG.BUCKET).upload(path, blob, { contentType: "image/jpeg" });
   if (!error) {
     ({ error } = await sb.from("snaps").insert({
       image_path: path,
-      detections: preds.map(p => ({
-        class: p.class,
-        confidence: p.confidence,
-        x: p.x, y: p.y, width: p.width, height: p.height
-      }))
+      detections: payload
     }));
   }
 
   $("snap").disabled = (mode === "idle");
   if (error) return say("msg", "Save failed: " + error.message, "err");
-  say("msg", "Proof saved to your account!", "ok");
+  say("msg", `Saved (${circuit.label}) to your account!`, "ok");
   loadGallery();
 }
 
@@ -513,15 +715,20 @@ async function loadGallery() {
   }
 
   $("gallery").innerHTML = data.map((d, i) => {
-    const dets = Array.isArray(d.detections) ? d.detections : [];
+    // Supports both new object format and older array format
+    const raw = d.detections;
+    const dets = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.items) ? raw.items : []);
+    const cType = (!Array.isArray(raw) && raw && raw.circuit_type) ? raw.circuit_type : classifyCircuit(dets).label;
+    const cKind = (!Array.isArray(raw) && raw && raw.circuit_kind) ? raw.circuit_kind : classifyCircuit(dets).kind;
     const avg = dets.length ? Math.round((dets.reduce((s, p) => s + (p.confidence || 0), 0) / dets.length) * 100) + "%" : "—";
     const kinds = [...new Set(dets.map(p => p.class))].join(", ") || "Nothing detected";
     const imgUrl = (urls && urls[i] && urls[i].signedUrl) ? urls[i].signedUrl : "";
     const stamp = new Date(d.created_at).toLocaleString();
     return `
       <figure>
-        <img src="${imgUrl}" alt="Saved snap" loading="lazy" data-full="${imgUrl}" data-cap="${esc(stamp + ' · ' + kinds + ' (' + avg + ')')}">
+        <img src="${imgUrl}" alt="Saved snap" loading="lazy" data-full="${imgUrl}" data-cap="${esc(cType + ' · ' + stamp + ' · ' + kinds + ' (' + avg + ')')}">
         <figcaption>
+          <div><span class="pill ${cKind}">${esc(cType)}</span></div>
           <div><strong>${esc(stamp)}</strong></div>
           <div class="muted">${esc(kinds)} · Avg: <strong>${avg}</strong></div>
           <div class="cap-actions">
