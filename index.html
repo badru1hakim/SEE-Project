@@ -210,9 +210,18 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 <script>
 /* ---------- CONFIG ---------- */
 const CFG = {
-  ROBOFLOW_MODEL: "badrul-hakim/see-project-5-yolo26n-t1",
-  ROBOFLOW_KEY: "1QsdkcZVIfZuJemWI0Ot",
-  ROBOFLOW_HOST: "https://serverless.roboflow.com",
+/* ---------- ROBOFLOW INFERENCE (VIA SUPABASE PROXY) ---------- */
+async function inferBase64(b64, fallbackW, fallbackH) {
+  const { data, error } = await sb.functions.invoke("roboflow-proxy", {
+    body: { image: b64, confidence: CFG.CONFIDENCE }
+  });
+  if (error) throw new Error(error.message);
+  return {
+    preds: (data && data.predictions) || [],
+    w: (data && data.image && data.image.width) || fallbackW,
+    h: (data && data.image && data.image.height) || fallbackH
+  };
+}
   CONFIDENCE: 0.4,
   SUPABASE_URL: "https://svctekpjvcwiusphpsqx.supabase.co",
   SUPABASE_KEY: "sb_publishable_kFROD88dmBeXvfmsfEdcMA_ltP00D3o",
