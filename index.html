@@ -19,15 +19,13 @@
 [hidden]{display:none!important}
 body{
   margin:0; background:var(--board); color:var(--ink);
-  font:500 16px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
-  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
-  background-size:28px 28px; background-position:-1px -1px;
-}
+  font:500 18px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
+  }
 header{
   background:var(--mask); color:var(--silk); display:flex; align-items:center;
   gap:14px; padding:12px clamp(16px,4vw,40px); border-bottom:4px solid var(--gold); flex-wrap:wrap;
 }
-header h1{margin:0; font-size:1.35rem; font-weight:700; letter-spacing:.01em; flex:1}
+header h1{margin:0; font-size:1.75rem; font-weight:700; letter-spacing:.01em; flex:1}
 header .model-tag{
   font-size:.82rem; font-weight:700; background:var(--gold); color:var(--ink);
   padding:2px 8px; border-radius:3px; vertical-align:middle; margin-left:8px;
@@ -36,7 +34,7 @@ header .user-badge{
   font-size:.95rem; background:var(--mask-dk); border:1px solid rgba(200,162,74,.45);
   padding:4px 10px; border-radius:4px;
 }
-main{max-width:1160px; margin:0 auto; padding:clamp(16px,3vw,32px)}
+main{max-width:1400px; margin:0 auto; padding:clamp(16px,3vw,32px)}
 button{
   font:inherit; font-weight:600; border:2px solid var(--mask);
   background:var(--silk); color:var(--mask); padding:9px 15px; border-radius:4px; cursor:pointer;
@@ -62,7 +60,7 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 #authmsg,#msg{min-height:1.4em; margin:0; font-size:.95rem}
 
 /* Dashboard Layout */
-.layout{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; align-items:start}
+.layout{display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:20px; align-items:start}
 .stage{
   position:relative; background:#050B0A; border:2px solid var(--mask);
   border-radius:4px; aspect-ratio:16/9; overflow:hidden;
@@ -89,7 +87,7 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
   font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
 }
 .circuit-box .verdict{
-  font-size:1.45rem; font-weight:700; line-height:1.15; margin:3px 0 4px; color:var(--ink);
+  font-size:1.9rem; font-weight:700; line-height:1.15; margin:3px 0 4px; color:var(--ink);
 }
 .circuit-box .detail{font-size:.88rem; color:var(--muted)}
 .circuit-box.series{border-color:var(--series); background:#FFFBEB}
@@ -119,12 +117,12 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 /* History Gallery */
 .gal{margin-top:28px}
 .gal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
-#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px}
+#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px}
 figure{
   margin:0; background:var(--silk); border:2px solid var(--mask);
   border-radius:4px; overflow:hidden; display:flex; flex-direction:column;
 }
-figure img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; background:#050B0A; cursor:pointer}
+figure img{display:block; width:100%; aspect-ratio:4/3; object-fit:cover; background:#050B0A; cursor:pointer}
 figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 .cap-actions{display:flex; gap:6px; margin-top:auto}
 .cap-actions a,.cap-actions button{flex:1; text-align:center; text-decoration:none}
