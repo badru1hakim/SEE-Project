@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Circuit Scanner — SEE Project</title>
+<title>Circuit Scanner v7 — SEE Project</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
 [hidden]{display:none!important}
 body{
   margin:0; background:var(--board); color:var(--ink);
-  font:500 18px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
+  font:500 16px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
   background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
   background-size:28px 28px; background-position:-1px -1px;
 }
@@ -27,12 +27,16 @@ header{
   background:var(--mask); color:var(--silk); display:flex; align-items:center;
   gap:14px; padding:12px clamp(16px,4vw,40px); border-bottom:4px solid var(--gold); flex-wrap:wrap;
 }
-header h1{margin:0; font-size:1.75rem; font-weight:700; letter-spacing:.01em; flex:1}
+header h1{margin:0; font-size:1.35rem; font-weight:700; letter-spacing:.01em; flex:1}
+header .model-tag{
+  font-size:.82rem; font-weight:700; background:var(--gold); color:var(--ink);
+  padding:2px 8px; border-radius:3px; vertical-align:middle; margin-left:8px;
+}
 header .user-badge{
   font-size:.95rem; background:var(--mask-dk); border:1px solid rgba(200,162,74,.45);
   padding:4px 10px; border-radius:4px;
 }
-main{max-width:1400px; margin:0 auto; padding:clamp(16px,3vw,32px)}
+main{max-width:1160px; margin:0 auto; padding:clamp(16px,3vw,32px)}
 button{
   font:inherit; font-weight:600; border:2px solid var(--mask);
   background:var(--silk); color:var(--mask); padding:9px 15px; border-radius:4px; cursor:pointer;
@@ -58,10 +62,10 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 #authmsg,#msg{min-height:1.4em; margin:0; font-size:.95rem}
 
 /* Dashboard Layout */
-.layout{display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:20px; align-items:start}
+.layout{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; align-items:start}
 .stage{
   position:relative; background:#050B0A; border:2px solid var(--mask);
-  border-radius:4px; aspect-ratio:4/3; overflow:hidden;
+  border-radius:4px; aspect-ratio:16/9; overflow:hidden;
 }
 .stage video,.stage canvas,.stage img.preview{
   position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
@@ -85,7 +89,7 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
   font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
 }
 .circuit-box .verdict{
-  font-size:1.9rem; font-weight:700; line-height:1.15; margin:3px 0 4px; color:var(--ink);
+  font-size:1.45rem; font-weight:700; line-height:1.15; margin:3px 0 4px; color:var(--ink);
 }
 .circuit-box .detail{font-size:.88rem; color:var(--muted)}
 .circuit-box.series{border-color:var(--series); background:#FFFBEB}
@@ -115,7 +119,7 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 /* History Gallery */
 .gal{margin-top:28px}
 .gal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
-#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px}
+#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px}
 figure{
   margin:0; background:var(--silk); border:2px solid var(--mask);
   border-radius:4px; overflow:hidden; display:flex; flex-direction:column;
@@ -142,7 +146,7 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 </head>
 <body>
 <header>
-  <h1>Circuit Scanner</h1>
+  <h1>Circuit Scanner <span class="model-tag">YOLO26 v7</span></h1>
   <span id="who" class="user-badge" hidden></span>
   <button id="out" type="button" hidden>Sign out</button>
 </header>
@@ -245,6 +249,7 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 <script>
 /* ---------- CONFIG ---------- */
 const CFG = {
+  MODEL_ID: "badrul-hakim/see-project-7-yolo26n-t1",
   CONFIDENCE: 0.4,
   SUPABASE_URL: "https://svctekpjvcwiusphpsqx.supabase.co",
   SUPABASE_KEY: "sb_publishable_kFROD88dmBeXvfmsfEdcMA_ltP00D3o",
@@ -323,12 +328,10 @@ function classifyCircuit(preds, imgW, imgH) {
     h: p.height
   }));
 
-  // Count component types for readable summary
   const counts = {};
   comps.forEach(c => { counts[c.cls] = (counts[c.cls] || 0) + 1; });
   const summary = Object.entries(counts).map(([k, n]) => `${n} ${k}`).join(", ");
 
-  // Special case: exactly 2 components
   if (comps.length === 2) {
     const [a, b] = comps;
     const dx = Math.abs(a.cx - b.cx);
@@ -336,22 +339,12 @@ function classifyCircuit(preds, imgW, imgH) {
     const overlapX = Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1);
     const minW = Math.max(1, Math.min(a.w, b.w));
 
-    // Stacked on separate rows with horizontal overlap -> Parallel
     if (overlapX > 0.4 * minW || dy > dx * 1.15) {
-      return {
-        kind: "parallel",
-        label: "PARALLEL CIRCUIT",
-        detail: `2 parallel branches (${summary})`
-      };
+      return { kind: "parallel", label: "PARALLEL CIRCUIT", detail: `2 parallel branches (${summary})` };
     }
-    return {
-      kind: "series",
-      label: "SERIES CIRCUIT",
-      detail: `End-to-end chain (${summary})`
-    };
+    return { kind: "series", label: "SERIES CIRCUIT", detail: `End-to-end chain (${summary})` };
   }
 
-  // General case: N >= 3 components
   const byX = [...comps].sort((a, b) => a.cx - b.cx);
   let hasParallelStack = false;
   for (let i = 0; i < byX.length - 1; i++) {
@@ -365,14 +358,9 @@ function classifyCircuit(preds, imgW, imgH) {
   }
 
   if (!hasParallelStack) {
-    return {
-      kind: "series",
-      label: "SERIES CIRCUIT",
-      detail: `${comps.length} components in series (${summary})`
-    };
+    return { kind: "series", label: "SERIES CIRCUIT", detail: `${comps.length} components in series (${summary})` };
   }
 
-  // Group into horizontal rows to count parallel branches
   const byY = [...comps].sort((a, b) => a.cy - b.cy);
   const rowTol = Math.max(30, (imgH || 360) * 0.1);
   const rows = [[byY[0]]];
@@ -385,18 +373,13 @@ function classifyCircuit(preds, imgW, imgH) {
     }
   }
 
-  return {
-    kind: "parallel",
-    label: "PARALLEL CIRCUIT",
-    detail: `${rows.length} parallel branches (${summary})`
-  };
+  return { kind: "parallel", label: "PARALLEL CIRCUIT", detail: `${rows.length} parallel branches (${summary})` };
 }
 
 /* ---------- DRAWING & DASHBOARD ---------- */
 function drawBoxes(c, preds, sx, sy, circuit) {
   const s = Math.max(1, c.canvas.width / 640);
 
-  // Subtle connecting line between component centers when classified
   if (preds.length >= 2 && (circuit.kind === "series" || circuit.kind === "parallel")) {
     const sorted = [...preds].sort((a, b) => circuit.kind === "series" ? a.x - b.x : a.y - b.y);
     c.save();
@@ -412,7 +395,6 @@ function drawBoxes(c, preds, sx, sy, circuit) {
     c.restore();
   }
 
-  // Component bounding boxes
   c.lineWidth = 2.5 * s;
   c.font = `600 ${14 * s}px "Barlow Semi Condensed",sans-serif`;
   c.textBaseline = "middle";
@@ -434,7 +416,6 @@ function drawBoxes(c, preds, sx, sy, circuit) {
     c.fillText(label, x + 5 * s, ty + th / 2);
   }
 
-  // Top-left live Circuit Type badge on canvas
   if (circuit && circuit.kind !== "unknown") {
     const badgeBg = circuit.kind === "series" ? "rgba(217,119,6,0.92)" : "rgba(13,148,136,0.92)";
     const text = `CIRCUIT: ${circuit.label}`;
@@ -487,7 +468,7 @@ function paint() {
 /* ---------- ROBOFLOW INFERENCE (VIA SUPABASE PROXY) ---------- */
 async function inferBase64(b64, fallbackW, fallbackH) {
   const { data, error } = await sb.functions.invoke("roboflow-proxy", {
-    body: { image: b64, confidence: CFG.CONFIDENCE }
+    body: { image: b64, confidence: CFG.CONFIDENCE, model: CFG.MODEL_ID }
   });
   if (error) throw new Error(error.message);
   return {
@@ -645,7 +626,6 @@ async function snap() {
   const circuit = classifyCircuit(preds, last.w, last.h);
   drawBoxes(x, preds, w / last.w, h / last.h, circuit);
 
-  // Proof watermark bar with Circuit Type + User Name + Timestamp
   const barH = Math.max(30, Math.round(h * 0.058));
   x.fillStyle = "rgba(14,74,60,0.88)";
   x.fillRect(0, h - barH, w, barH);
@@ -715,7 +695,6 @@ async function loadGallery() {
   }
 
   $("gallery").innerHTML = data.map((d, i) => {
-    // Supports both new object format and older array format
     const raw = d.detections;
     const dets = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.items) ? raw.items : []);
     const cType = (!Array.isArray(raw) && raw && raw.circuit_type) ? raw.circuit_type : classifyCircuit(dets).label;
