@@ -10,9 +10,18 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --mask:#0E4A3C; --mask-dk:#0A3A2F; --gold:#C8A24A; --silk:#F4F6F2;
-  --board:#DCE6E1; --ink:#101B1A; --muted:#5A6B66; --line:#B9C9C2; --err:#A62B2B; --ok:#1A6B42;
-  --series:#D97706; --parallel:#0D9488;
+  --mask:#0B2239;      /* Dark blue (header, Sign in button, borders) */
+  --mask-dk:#071626;   /* Deeper navy (labels, user badge) */
+  --gold:#7CC4FA;      /* Light blue accent stripe & badge (or keep #C8A24A for gold) */
+  --silk:#E8F4FF;      /* Blue-white (cards, panels, Register button) */
+  --board:#0B2239;     /* Fallback page background */
+  --ink:#0A1929;       /* Dark navy text */
+  --muted:#47637F;     /* Muted blue-grey text */
+  --line:#99CEFF;      /* Soft blue borders & dividers */
+  --err:#B91C1C;
+  --ok:#0F766E;
+  --series:#D97706;
+  --parallel:#0284C7;
   box-sizing:border-box;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -50,7 +59,7 @@ button:disabled{opacity:.45; cursor:not-allowed}
 :focus-visible{outline:3px solid var(--gold); outline-offset:2px}
 input{
   font:inherit; width:100%; padding:9px 11px; border:2px solid var(--line);
-  border-radius:4px; background:#fff;
+  border-radius:4px; background:#F4FAFF; color:var(--ink);
 }
 label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:var(--mask-dk)}
 .panel{background:var(--silk); border:2px solid var(--mask); border-radius:4px; padding:18px}
@@ -639,7 +648,7 @@ async function snap() {
   drawBoxes(x, preds, w / last.w, h / last.h, circuit);
 
   const barH = Math.max(30, Math.round(h * 0.058));
-  x.fillStyle = "rgba(14,74,60,0.88)";
+  x.fillStyle = "rgba(11,34,57,0.88)";
   x.fillRect(0, h - barH, w, barH);
   x.fillStyle = "#F4F6F2";
   x.font = `600 ${Math.round(barH * 0.54)}px "Barlow Semi Condensed",sans-serif`;
