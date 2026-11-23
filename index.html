@@ -210,18 +210,6 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 <script>
 /* ---------- CONFIG ---------- */
 const CFG = {
-/* ---------- ROBOFLOW INFERENCE (VIA SUPABASE PROXY) ---------- */
-async function inferBase64(b64, fallbackW, fallbackH) {
-  const { data, error } = await sb.functions.invoke("roboflow-proxy", {
-    body: { image: b64, confidence: CFG.CONFIDENCE }
-  });
-  if (error) throw new Error(error.message);
-  return {
-    preds: (data && data.predictions) || [],
-    w: (data && data.image && data.image.width) || fallbackW,
-    h: (data && data.image && data.image.height) || fallbackH
-  };
-}
   CONFIDENCE: 0.4,
   SUPABASE_URL: "https://svctekpjvcwiusphpsqx.supabase.co",
   SUPABASE_KEY: "sb_publishable_kFROD88dmBeXvfmsfEdcMA_ltP00D3o",
@@ -246,10 +234,10 @@ const video = $("video"), staticImg = $("static-img"), overlay = $("overlay"), o
 const grab = document.createElement("canvas");
 
 let user = null;
-let authMode = "in"; // "in" | "up"
+let authMode = "in";
 let stream = null;
 let running = false;
-let mode = "idle";   // "idle" | "cam" | "photo"
+let mode = "idle";
 let last = { preds: [], w: 640, h: 360 };
 
 const displayName = u => (u && u.user_metadata && u.user_metadata.full_name) ? u.user_metadata.full_name : (u ? u.email : "Guest");
@@ -303,23 +291,16 @@ function paint() {
   }).join("");
 }
 
-/* ---------- ROBOFLOW INFERENCE ---------- */
+/* ---------- ROBOFLOW INFERENCE (VIA SUPABASE PROXY) ---------- */
 async function inferBase64(b64, fallbackW, fallbackH) {
-  const url = `${CFG.ROBOFLOW_HOST}/${CFG.ROBOFLOW_MODEL}?api_key=${encodeURIComponent(CFG.ROBOFLOW_KEY)}&confidence=${CFG.CONFIDENCE}`;
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: b64
+  const { data, error } = await sb.functions.invoke("roboflow-proxy", {
+    body: { image: b64, confidence: CFG.CONFIDENCE }
   });
-  if (!r.ok) {
-    const errText = await r.text();
-    throw new Error(`${r.status} ${r.statusText}: ${errText.slice(0, 140)}`);
-  }
-  const d = await r.json();
+  if (error) throw new Error(error.message);
   return {
-    preds: d.predictions || [],
-    w: (d.image && d.image.width) || fallbackW,
-    h: (d.image && d.image.height) || fallbackH
+    preds: (data && data.predictions) || [],
+    w: (data && data.image && data.image.width) || fallbackW,
+    h: (data && data.image && data.image.height) || fallbackH
   };
 }
 
@@ -470,7 +451,6 @@ async function snap() {
   const preds = last.preds.slice();
   drawBoxes(x, preds, w / last.w, h / last.h);
 
-  // Proof watermark strip
   const barH = Math.max(28, Math.round(h * 0.055));
   x.fillStyle = "rgba(14,74,60,0.85)";
   x.fillRect(0, h - barH, w, barH);
