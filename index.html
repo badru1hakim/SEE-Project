@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circuit Scanner — SEE Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --mask:#0E4A3C; --mask-dk:#0A3A2F; --gold:#C8A24A; --silk:#F4F6F2;
+  --board:#DCE6E1; --ink:#101B1A; --muted:#5A6B66; --line:#B9C9C2; --err:#A62B2B; --ok:#1A6B42;
+  box-sizing:border-box;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+body{
+  margin:0; background:var(--board); color:var(--ink);
+  font:500 16px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:28px 28px; background-position:-1px -1px;
+}
+header{
+  background:var(--mask); color:var(--silk); display:flex; align-items:center;
+  gap:14px; padding:12px clamp(16px,4vw,40px); border-bottom:4px solid var(--gold); flex-wrap:wrap;
+}
+header h1{margin:0; font-size:1.35rem; font-weight:700; letter-spacing:.01em; flex:1}
+header .user-badge{
+  font-size:.95rem; background:var(--mask-dk); border:1px solid rgba(200,162,74,.45);
+  padding:4px 10px; border-radius:4px;
+}
+main{max-width:1160px; margin:0 auto; padding:clamp(16px,3vw,32px)}
+button{
+  font:inherit; font-weight:600; border:2px solid var(--mask);
+  background:var(--silk); color:var(--mask); padding:9px 15px; border-radius:4px; cursor:pointer;
+}
+button.primary{background:var(--mask); color:var(--silk)}
+button.gold{background:var(--gold); border-color:var(--gold); color:var(--ink)}
+button.danger{border-color:var(--err); color:var(--err); padding:5px 10px; font-size:.85rem}
+button.sm{padding:5px 10px; font-size:.85rem}
+button:hover:not(:disabled){filter:brightness(1.06)}
+button:disabled{opacity:.45; cursor:not-allowed}
+:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+input{
+  font:inherit; width:100%; padding:9px 11px; border:2px solid var(--line);
+  border-radius:4px; background:#fff;
+}
+label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:var(--mask-dk)}
+.panel{background:var(--silk); border:2px solid var(--mask); border-radius:4px; padding:18px}
+
+/* Auth Card */
+#auth{max-width:400px; margin:6vh auto; display:grid; gap:12px}
+.tabs{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.tabs button.active{background:var(--mask); color:var(--silk)}
+#authmsg,#msg{min-height:1.4em; margin:0; font-size:.95rem}
+
+/* Dashboard Layout */
+.layout{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px; align-items:start}
+.stage{
+  position:relative; background:#050B0A; border:2px solid var(--mask);
+  border-radius:4px; aspect-ratio:16/9; overflow:hidden;
+}
+.stage video,.stage canvas,.stage img.preview{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+}
+.idle{
+  position:absolute; inset:0; display:grid; place-items:center;
+  color:#9FB5AE; text-align:center; padding:24px; pointer-events:none;
+}
+#status{margin:8px 2px 0; color:var(--muted); font-variant-numeric:tabular-nums}
+.row{display:flex; gap:10px; flex-wrap:wrap}
+.row>*{flex:1}
+.rail{display:grid; gap:14px}
+.rail h2,.gal h2{margin:0 0 8px; font-size:1.1rem}
+.meta-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px}
+.stat{background:#fff; border:1px solid var(--line); border-radius:4px; padding:8px 10px}
+.stat span{display:block; font-size:.8rem; color:var(--muted)}
+.stat strong{font-size:1.15rem; color:var(--mask)}
+
+#dets{list-style:none; margin:0; padding:0; display:grid; gap:6px}
+#dets li{display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--line)}
+#dets i{width:12px; height:12px; border-radius:2px; flex:none}
+#dets .acc{margin-left:auto; font-variant-numeric:tabular-nums; font-weight:700; color:var(--mask)}
+.muted{color:var(--muted)}
+
+/* History Gallery */
+.gal{margin-top:28px}
+.gal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px}
+figure{
+  margin:0; background:var(--silk); border:2px solid var(--mask);
+  border-radius:4px; overflow:hidden; display:flex; flex-direction:column;
+}
+figure img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; background:#050B0A; cursor:pointer}
+figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
+.cap-actions{display:flex; gap:6px; margin-top:auto}
+.cap-actions a,.cap-actions button{flex:1; text-align:center; text-decoration:none}
+
+/* Lightbox Modal */
+#modal{
+  position:fixed; inset:0; background:rgba(5,11,10,.86); display:grid;
+  place-items:center; padding:20px; z-index:50;
+}
+#modal .box{
+  background:var(--silk); border:2px solid var(--gold); border-radius:6px;
+  max-width:900px; width:100%; overflow:hidden;
+}
+#modal img{display:block; width:100%; max-height:72vh; object-fit:contain; background:#050B0A}
+#modal .bar{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; gap:12px}
+
+@media(max-width:860px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Circuit Scanner</h1>
+  <span id="who" class="user-badge" hidden></span>
+  <button id="out" type="button" hidden>Sign out</button>
+</header>
+
+<main>
+  <!-- AUTH VIEW -->
+  <section id="auth" class="panel" hidden>
+    <div class="tabs">
+      <button id="tab-in" type="button" class="active">Sign in</button>
+      <button id="tab-up" type="button">Register</button>
+    </div>
+    <div id="name-wrap" hidden>
+      <label for="fullname">Full name</label>
+      <input id="fullname" type="text" placeholder="e.g. Badrul Hakim" autocomplete="name">
+    </div>
+    <div>
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div>
+      <label for="pw">Password</label>
+      <input id="pw" type="password" placeholder="Minimum 6 characters" autocomplete="current-password">
+    </div>
+    <button id="auth-submit" type="button" class="primary">Sign in</button>
+    <p id="authmsg" role="status"></p>
+  </section>
+
+  <!-- APP VIEW -->
+  <section id="app" hidden>
+    <div class="layout">
+      <div>
+        <div class="stage">
+          <video id="video" playsinline muted></video>
+          <img id="static-img" class="preview" alt="Uploaded circuit" hidden>
+          <canvas id="overlay"></canvas>
+          <div class="idle" id="idle">Click <strong>Start camera</strong> or <strong>Upload photo</strong> to begin circuit detection.</div>
+        </div>
+        <p id="status" role="status">Camera off</p>
+      </div>
+
+      <div class="rail">
+        <div class="panel" style="display:grid;gap:10px">
+          <div class="row">
+            <button id="start" type="button" class="primary">Start camera</button>
+            <button id="snap" type="button" class="gold" disabled>Snap result</button>
+          </div>
+          <div class="row">
+            <button id="upload-btn" type="button">Upload photo</button>
+            <input id="file-in" type="file" accept="image/*" hidden>
+          </div>
+          <p id="msg" role="status"></p>
+        </div>
+
+        <div class="panel">
+          <h2>Detection Dashboard</h2>
+          <div class="meta-grid">
+            <div class="stat">
+              <span>Account</span>
+              <strong id="dash-user" style="font-size:.95rem;word-break:break-word">—</strong>
+            </div>
+            <div class="stat">
+              <span>Avg Accuracy</span>
+              <strong id="dash-acc">—</strong>
+            </div>
+          </div>
+          <ul id="dets"><li class="muted">Waiting for input</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="gal" id="galwrap">
+      <div class="gal-head">
+        <h2>Your Saved Snaps (Proof History)</h2>
+        <button id="refresh-gal" type="button" class="sm">Refresh</button>
+      </div>
+      <div id="gallery"></div>
+    </div>
+  </section>
+</main>
+
+<!-- FULL-SIZE PREVIEW MODAL -->
+<div id="modal" hidden>
+  <div class="box">
+    <img id="modal-img" alt="Saved proof snap">
+    <div class="bar">
+      <span id="modal-cap"></span>
+      <button id="modal-close" type="button" class="primary sm">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- CONFIG ---------- */
+const CFG = {
+  ROBOFLOW_MODEL: "badrul-hakim/see-project-5-yolo26n-t1",
+  ROBOFLOW_KEY: "1QsdkcZVIfZuJemWI0Ot",
+  ROBOFLOW_HOST: "https://serverless.roboflow.com",
+  CONFIDENCE: 0.4,
+  SUPABASE_URL: "https://svctekpjvcwiusphpsqx.supabase.co",
+  SUPABASE_KEY: "sb_publishable_kFROD88dmBeXvfmsfEdcMA_ltP00D3o",
+  BUCKET: "snaps"
+};
+
+/* ---------- HELPERS & STATE ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const color = c => { let h = 0; for (const ch of c) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 85% 60%)`; };
+const say = (el, t, type = "") => {
+  $(el).textContent = t;
+  $(el).style.color = type === "err" ? "var(--err)" : (type === "ok" ? "var(--ok)" : "var(--muted)");
+};
+
+const sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
+
+const video = $("video"), staticImg = $("static-img"), overlay = $("overlay"), octx = overlay.getContext("2d");
+const grab = document.createElement("canvas");
+
+let user = null;
+let authMode = "in"; // "in" | "up"
+let stream = null;
+let running = false;
+let mode = "idle";   // "idle" | "cam" | "photo"
+let last = { preds: [], w: 640, h: 360 };
+
+const displayName = u => (u && u.user_metadata && u.user_metadata.full_name) ? u.user_metadata.full_name : (u ? u.email : "Guest");
+
+/* ---------- DRAWING & DASHBOARD ---------- */
+function drawBoxes(c, preds, sx, sy) {
+  const s = Math.max(1, c.canvas.width / 640);
+  c.lineWidth = 2.5 * s;
+  c.font = `600 ${14 * s}px "Barlow Semi Condensed",sans-serif`;
+  c.textBaseline = "middle";
+  for (const p of preds) {
+    const x = (p.x - p.width / 2) * sx;
+    const y = (p.y - p.height / 2) * sy;
+    const w = p.width * sx;
+    const h = p.height * sy;
+    const col = color(p.class);
+    c.strokeStyle = col;
+    c.strokeRect(x, y, w, h);
+    const label = `${p.class} ${Math.round(p.confidence * 100)}%`;
+    const tw = c.measureText(label).width + 10 * s;
+    const th = 20 * s;
+    const ty = y - th < 0 ? y : y - th;
+    c.fillStyle = col;
+    c.fillRect(x, ty, tw, th);
+    c.fillStyle = "#101B1A";
+    c.fillText(label, x + 5 * s, ty + th / 2);
+  }
+}
+
+function paint() {
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  drawBoxes(octx, last.preds, overlay.width / last.w, overlay.height / last.h);
+
+  if (!last.preds.length) {
+    $("dash-acc").textContent = "—";
+    $("dets").innerHTML = `<li class="muted">${mode === "idle" ? "Waiting for input" : "Nothing detected yet"}</li>`;
+    return;
+  }
+
+  const avg = Math.round((last.preds.reduce((s, p) => s + p.confidence, 0) / last.preds.length) * 100);
+  $("dash-acc").textContent = avg + "%";
+
+  const grouped = {};
+  for (const p of last.preds) {
+    if (!grouped[p.class]) grouped[p.class] = [];
+    grouped[p.class].push(p.confidence);
+  }
+  $("dets").innerHTML = Object.entries(grouped).map(([cls, confs]) => {
+    const cAvg = Math.round((confs.reduce((a, b) => a + b, 0) / confs.length) * 100);
+    return `<li><i style="background:${color(cls)}"></i><span>${esc(cls)} <strong>×${confs.length}</strong></span><span class="acc">${cAvg}%</span></li>`;
+  }).join("");
+}
+
+/* ---------- ROBOFLOW INFERENCE ---------- */
+async function inferBase64(b64, fallbackW, fallbackH) {
+  const url = `${CFG.ROBOFLOW_HOST}/${CFG.ROBOFLOW_MODEL}?api_key=${encodeURIComponent(CFG.ROBOFLOW_KEY)}&confidence=${CFG.CONFIDENCE}`;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: b64
+  });
+  if (!r.ok) {
+    const errText = await r.text();
+    throw new Error(`${r.status} ${r.statusText}: ${errText.slice(0, 140)}`);
+  }
+  const d = await r.json();
+  return {
+    preds: d.predictions || [],
+    w: (d.image && d.image.width) || fallbackW,
+    h: (d.image && d.image.height) || fallbackH
+  };
+}
+
+/* ---------- CAMERA ---------- */
+async function startCam() {
+  say("msg", "");
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    return say("status", "Camera API unavailable. Open this file via http://localhost or https:// (not file://).", "err");
+  }
+
+  say("status", "Requesting camera permission…");
+  try {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+    } catch (_) {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    }
+  } catch (e) {
+    return say("status", `Camera blocked (${e.name}): ${e.message}. Allow camera access in your browser.`, "err");
+  }
+
+  staticImg.hidden = true;
+  video.hidden = false;
+  video.srcObject = stream;
+
+  await new Promise(resolve => {
+    if (video.readyState >= 1) return resolve();
+    video.onloadedmetadata = resolve;
+  });
+  await video.play();
+
+  overlay.width = video.videoWidth || 1280;
+  overlay.height = video.videoHeight || 720;
+  running = true;
+  mode = "cam";
+  $("idle").hidden = true;
+  $("snap").disabled = false;
+  $("start").textContent = "Stop camera";
+  loop();
+}
+
+function stopCam() {
+  running = false;
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  video.srcObject = null;
+  if (mode === "cam") {
+    mode = "idle";
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    last.preds = [];
+    $("idle").hidden = false;
+    $("snap").disabled = true;
+    say("status", "Camera off");
+    paint();
+  }
+  $("start").textContent = "Start camera";
+}
+
+async function loop() {
+  while (running) {
+    if (!video.videoWidth || !video.videoHeight) {
+      await sleep(100);
+      continue;
+    }
+    const t0 = performance.now();
+    const W = 640;
+    grab.width = W;
+    grab.height = Math.round(W * video.videoHeight / video.videoWidth);
+    grab.getContext("2d").drawImage(video, 0, 0, grab.width, grab.height);
+    const b64 = grab.toDataURL("image/jpeg", 0.7).split(",")[1];
+
+    try {
+      const res = await inferBase64(b64, grab.width, grab.height);
+      if (!running) break;
+      last = res;
+      paint();
+      const fps = Math.max(1, Math.round(1000 / (performance.now() - t0)));
+      say("status", `${last.preds.length} component(s) detected · ${fps} fps`);
+    } catch (e) {
+      say("status", "Roboflow error: " + e.message, "err");
+      await sleep(2000);
+    }
+  }
+}
+
+/* ---------- UPLOAD PHOTO FALLBACK ---------- */
+async function handleUpload(file) {
+  if (!file) return;
+  stopCam();
+  say("msg", "");
+  say("status", "Analyzing uploaded photo…");
+
+  const dataUrl = await new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+
+  staticImg.src = dataUrl;
+  await new Promise(res => { staticImg.onload = res; });
+
+  video.hidden = true;
+  staticImg.hidden = false;
+  $("idle").hidden = true;
+  overlay.width = staticImg.naturalWidth;
+  overlay.height = staticImg.naturalHeight;
+  mode = "photo";
+  $("snap").disabled = false;
+
+  const W = Math.min(800, staticImg.naturalWidth);
+  grab.width = W;
+  grab.height = Math.round(W * staticImg.naturalHeight / staticImg.naturalWidth);
+  grab.getContext("2d").drawImage(staticImg, 0, 0, grab.width, grab.height);
+  const b64 = grab.toDataURL("image/jpeg", 0.85).split(",")[1];
+
+  try {
+    last = await inferBase64(b64, grab.width, grab.height);
+    paint();
+    say("status", `Photo analyzed · ${last.preds.length} component(s) detected`, "ok");
+  } catch (e) {
+    last.preds = [];
+    paint();
+    say("status", "Roboflow error: " + e.message, "err");
+  }
+}
+
+/* ---------- SNAP TO SUPABASE ---------- */
+async function snap() {
+  if (!user) return say("msg", "Please sign in first to save snaps.", "err");
+  const src = mode === "cam" ? video : (mode === "photo" ? staticImg : null);
+  if (!src) return;
+
+  const w = mode === "cam" ? video.videoWidth : staticImg.naturalWidth;
+  const h = mode === "cam" ? video.videoHeight : staticImg.naturalHeight;
+  if (!w || !h) return;
+
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const x = c.getContext("2d");
+  x.drawImage(src, 0, 0, w, h);
+
+  const preds = last.preds.slice();
+  drawBoxes(x, preds, w / last.w, h / last.h);
+
+  // Proof watermark strip
+  const barH = Math.max(28, Math.round(h * 0.055));
+  x.fillStyle = "rgba(14,74,60,0.85)";
+  x.fillRect(0, h - barH, w, barH);
+  x.fillStyle = "#F4F6F2";
+  x.font = `600 ${Math.round(barH * 0.55)}px "Barlow Semi Condensed",sans-serif`;
+  x.textBaseline = "middle";
+  x.fillText(`PROOF · ${displayName(user)} · ${new Date().toLocaleString()}`, 12, h - barH / 2);
+
+  const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
+  const path = `${user.id}/${Date.now()}.jpg`;
+
+  $("snap").disabled = true;
+  say("msg", "Saving proof to Supabase…");
+
+  let { error } = await sb.storage.from(CFG.BUCKET).upload(path, blob, { contentType: "image/jpeg" });
+  if (!error) {
+    ({ error } = await sb.from("snaps").insert({
+      image_path: path,
+      detections: preds.map(p => ({
+        class: p.class,
+        confidence: p.confidence,
+        x: p.x, y: p.y, width: p.width, height: p.height
+      }))
+    }));
+  }
+
+  $("snap").disabled = (mode === "idle");
+  if (error) return say("msg", "Save failed: " + error.message, "err");
+  say("msg", "Proof saved to your account!", "ok");
+  loadGallery();
+}
+
+/* ---------- HISTORY GALLERY ---------- */
+async function loadGallery() {
+  if (!user) return;
+  $("gallery").innerHTML = '<p class="muted">Loading history…</p>';
+
+  const { data, error } = await sb
+    .from("snaps")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(24);
+
+  if (error) {
+    $("gallery").innerHTML = `<p style="color:var(--err)">Could not load history: ${esc(error.message)}</p>`;
+    return;
+  }
+  if (!data || !data.length) {
+    $("gallery").innerHTML = '<p class="muted">No snaps saved yet. Click <strong>Snap result</strong> to save proof here.</p>';
+    return;
+  }
+
+  const { data: urls, error: urlErr } = await sb.storage
+    .from(CFG.BUCKET)
+    .createSignedUrls(data.map(d => d.image_path), 3600);
+
+  if (urlErr) {
+    $("gallery").innerHTML = `<p style="color:var(--err)">Could not load images: ${esc(urlErr.message)}</p>`;
+    return;
+  }
+
+  $("gallery").innerHTML = data.map((d, i) => {
+    const dets = Array.isArray(d.detections) ? d.detections : [];
+    const avg = dets.length ? Math.round((dets.reduce((s, p) => s + (p.confidence || 0), 0) / dets.length) * 100) + "%" : "—";
+    const kinds = [...new Set(dets.map(p => p.class))].join(", ") || "Nothing detected";
+    const imgUrl = (urls && urls[i] && urls[i].signedUrl) ? urls[i].signedUrl : "";
+    const stamp = new Date(d.created_at).toLocaleString();
+    return `
+      <figure>
+        <img src="${imgUrl}" alt="Saved snap" loading="lazy" data-full="${imgUrl}" data-cap="${esc(stamp + ' · ' + kinds + ' (' + avg + ')')}">
+        <figcaption>
+          <div><strong>${esc(stamp)}</strong></div>
+          <div class="muted">${esc(kinds)} · Avg: <strong>${avg}</strong></div>
+          <div class="cap-actions">
+            <a href="${imgUrl}" download="circuit-proof-${d.id.slice(0,8)}.jpg" class="sm" style="border:2px solid var(--mask);border-radius:4px;color:var(--mask);font-weight:600;padding:4px 8px">Download</a>
+            <button type="button" class="danger" data-del-id="${d.id}" data-del-path="${esc(d.image_path)}">Delete</button>
+          </div>
+        </figcaption>
+      </figure>`;
+  }).join("");
+}
+
+async function deleteSnap(id, path) {
+  if (!confirm("Delete this saved proof permanently?")) return;
+  say("msg", "Deleting snap…");
+  await sb.storage.from(CFG.BUCKET).remove([path]);
+  const { error } = await sb.from("snaps").delete().eq("id", id);
+  if (error) return say("msg", "Delete failed: " + error.message, "err");
+  say("msg", "Snap deleted.", "ok");
+  loadGallery();
+}
+
+/* ---------- AUTH ---------- */
+function setAuthTab(m) {
+  authMode = m;
+  $("tab-in").classList.toggle("active", m === "in");
+  $("tab-up").classList.toggle("active", m === "up");
+  $("name-wrap").hidden = (m === "in");
+  $("auth-submit").textContent = m === "in" ? "Sign in" : "Create account";
+  say("authmsg", "");
+}
+
+async function submitAuth() {
+  const email = $("email").value.trim();
+  const password = $("pw").value;
+  const full_name = $("fullname").value.trim();
+
+  if (!email || password.length < 6) {
+    return say("authmsg", "Enter a valid email and password (6+ characters).", "err");
+  }
+
+  $("auth-submit").disabled = true;
+  say("authmsg", authMode === "in" ? "Signing in…" : "Creating account…");
+
+  let res;
+  if (authMode === "up") {
+    res = await sb.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: full_name || email.split("@")[0] } }
+    });
+  } else {
+    res = await sb.auth.signInWithPassword({ email, password });
+  }
+
+  $("auth-submit").disabled = false;
+
+  if (res.error) return say("authmsg", res.error.message, "err");
+
+  if (authMode === "up" && !res.data.session) {
+    return say("authmsg", "Account created! Check your email to confirm (or turn off 'Confirm email' in Supabase), then sign in.", "ok");
+  }
+
+  user = res.data.user;
+  render();
+}
+
+function render() {
+  const loggedIn = !!user;
+  $("auth").hidden = loggedIn;
+  $("app").hidden = !loggedIn;
+  $("out").hidden = !loggedIn;
+  $("who").hidden = !loggedIn;
+
+  if (loggedIn) {
+    const name = displayName(user);
+    $("who").textContent = name;
+    $("dash-user").textContent = name;
+    loadGallery();
+  } else {
+    stopCam();
+    $("gallery").innerHTML = "";
+  }
+}
+
+/* ---------- EVENT WIRING ---------- */
+$("tab-in").onclick = () => setAuthTab("in");
+$("tab-up").onclick = () => setAuthTab("up");
+$("auth-submit").onclick = submitAuth;
+$("pw").addEventListener("keydown", e => { if (e.key === "Enter") submitAuth(); });
+
+$("out").onclick = async () => {
+  stopCam();
+  await sb.auth.signOut();
+  user = null;
+  render();
+};
+
+$("start").onclick = () => running ? stopCam() : startCam();
+$("snap").onclick = snap;
+$("upload-btn").onclick = () => $("file-in").click();
+$("file-in").onchange = e => { handleUpload(e.target.files[0]); e.target.value = ""; };
+$("refresh-gal").onclick = loadGallery;
+
+$("gallery").addEventListener("click", e => {
+  const del = e.target.closest("[data-del-id]");
+  if (del) return deleteSnap(del.dataset.delId, del.dataset.delPath);
+  const img = e.target.closest("img[data-full]");
+  if (img) {
+    $("modal-img").src = img.dataset.full;
+    $("modal-cap").textContent = img.dataset.cap;
+    $("modal").hidden = false;
+  }
+});
+$("modal-close").onclick = () => { $("modal").hidden = true; };
+$("modal").onclick = e => { if (e.target.id === "modal") $("modal").hidden = true; };
+
+/* ---------- BOOT ---------- */
+(async () => {
+  const { data } = await sb.auth.getSession();
+  user = data && data.session ? data.session.user : null;
+  render();
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") {
+      user = null;
+      render();
+    } else if (session && session.user && (!user || user.id !== session.user.id)) {
+      user = session.user;
+      render();
+    }
+  });
+})();
+</script>
+</body>
+</html>
