@@ -41,6 +41,93 @@ body{
 }
 header, main, #modal{position:relative; z-index:1}
 
+/* Boom Shockwave Effect Layer */
+#boom-fx{
+  position:fixed; inset:0; pointer-events:none; z-index:40;
+  display:grid; place-items:center; overflow:hidden;
+}
+#boom-fx .ring{
+  position:absolute; width:140px; height:140px; border-radius:50%;
+  border:6px solid var(--gold);
+  box-shadow:0 0 40px var(--gold), inset 0 0 30px var(--gold);
+  opacity:0;
+}
+#boom-fx .flash{
+  position:absolute; inset:0;
+  background:radial-gradient(circle at center, rgba(124,196,250,0.85) 0%, rgba(2,132,199,0.28) 38%, transparent 72%);
+  opacity:0;
+}
+#boom-fx.fire .ring{
+  animation:boomRing 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+#boom-fx.fire .flash{
+  animation:boomFlash 0.5s ease-out forwards;
+}
+
+/* Compress & Boom Keyframes */
+@keyframes authCompress{
+  0%{
+    transform:scale(1, 1);
+    opacity:1;
+    filter:brightness(1);
+  }
+  30%{
+    transform:scale(1.07, 0.84);
+    opacity:1;
+    filter:brightness(1.2);
+  }
+  65%{
+    transform:scale(0.32, 0.14);
+    opacity:0.95;
+    filter:brightness(1.85);
+    box-shadow:0 0 55px rgba(124,196,250,0.95);
+  }
+  100%{
+    transform:scale(0.03, 0.03);
+    opacity:0;
+    filter:brightness(2.6) blur(4px);
+  }
+}
+@keyframes boomRing{
+  0%{transform:scale(0.15); opacity:1; border-width:10px}
+  100%{transform:scale(10); opacity:0; border-width:1px}
+}
+@keyframes boomFlash{
+  0%{opacity:0}
+  20%{opacity:0.85}
+  100%{opacity:0}
+}
+@keyframes appBoomIn{
+  0%{
+    transform:scale(0.55);
+    opacity:0;
+    filter:brightness(1.65) blur(6px);
+  }
+  58%{
+    transform:scale(1.03);
+    opacity:1;
+    filter:brightness(1.06) blur(0);
+  }
+  80%{
+    transform:scale(0.99);
+    opacity:1;
+  }
+  100%{
+    transform:scale(1);
+    opacity:1;
+    filter:brightness(1);
+  }
+}
+#auth.compressing{
+  animation:authCompress 0.44s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+  transform-origin:center center;
+  pointer-events:none;
+}
+#app.boom-in{
+  animation:appBoomIn 0.58s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-origin:center top;
+}
+
 /* Header with Credits (Left), Project Title (Center), Account Actions (Right) */
 header{
   background:rgba(11, 34, 57, 0.90); color:var(--silk);
@@ -211,6 +298,12 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 <!-- LIVE 3D CIRCUIT BACKGROUND -->
 <canvas id="bg3d" aria-hidden="true"></canvas>
 
+<!-- BOOM SHOCKWAVE OVERLAY -->
+<div id="boom-fx" aria-hidden="true">
+  <div class="flash"></div>
+  <div class="ring"></div>
+</div>
+
 <header>
   <div class="header-credits">
     <div><span class="lbl">Developer:</span> MUHAMMAD BADRUL HAKIM BIN MOHD AZMI</div>
@@ -328,6 +421,9 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
   const ctx = canvas.getContext("2d");
   let W = 0, H = 0, dpr = 1;
   let mx = 0, my = 0, tx = 0, ty = 0;
+  let warpBoost = 1;
+
+  window.trigger3DWarp = () => { warpBoost = 14; };
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -373,8 +469,8 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
   function frame() {
     mx += (tx - mx) * 0.05;
     my += (ty - my) * 0.05;
+    warpBoost += (1 - warpBoost) * 0.06;
 
-    // Deep blue radial atmospheric backdrop
     const grad = ctx.createRadialGradient(W * 0.5, H * 0.38, 40, W * 0.5, H * 0.5, Math.max(W, H) * 0.85);
     grad.addColorStop(0, "#0F2F52");
     grad.addColorStop(0.55, "#081C33");
@@ -383,11 +479,10 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
     ctx.fillRect(0, 0, W, H);
 
     // 1. Moving 3D Perspective PCB Floor Grid
-    gridOffset = (gridOffset + 1.8) % 90;
+    gridOffset = (gridOffset + 1.8 * warpBoost) % 90;
     const floorY = 260;
     ctx.lineWidth = 1;
 
-    // Horizontal depth lines
     for (let z = 90 - gridOffset; z < DEPTH; z += 90) {
       const alpha = Math.max(0, 1 - z / DEPTH) * 0.32;
       const pL = project(-1800, floorY, z);
@@ -399,7 +494,6 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
       ctx.stroke();
     }
 
-    // Longitudinal perspective rails
     for (let x = -1620; x <= 1620; x += 180) {
       const pNear = project(x, floorY, 20);
       const pFar = project(x, floorY, DEPTH);
@@ -418,7 +512,7 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
     for (const n of nodes) {
       n.x += n.vx;
       n.y += n.vy;
-      n.z += n.vz;
+      n.z += n.vz * warpBoost;
       if (n.z < 40) {
         n.z = DEPTH;
         n.x = (Math.random() - 0.5) * 1800;
@@ -503,6 +597,7 @@ let authMode = "in";
 let stream = null;
 let running = false;
 let mode = "idle";
+let transitioning = false;
 let last = { preds: [], w: 640, h: 360 };
 let lastCircuit = { kind: "unknown", label: "Waiting for circuit…", detail: "Place at least 2 components in view" };
 
@@ -952,7 +1047,7 @@ async function deleteSnap(id, path) {
   loadGallery();
 }
 
-/* ---------- AUTH ---------- */
+/* ---------- AUTH + COMPRESS-TO-BOOM TRANSITION ---------- */
 function setAuthTab(m) {
   authMode = m;
   $("tab-in").classList.toggle("active", m === "in");
@@ -960,6 +1055,43 @@ function setAuthTab(m) {
   $("name-wrap").hidden = (m === "in");
   $("auth-submit").textContent = m === "in" ? "Sign in" : "Create account";
   say("authmsg", "");
+}
+
+async function playCompressBoomToApp() {
+  if (transitioning) return;
+  transitioning = true;
+
+  // 1. Compress the Sign in / Register card inward
+  $("auth").classList.add("compressing");
+  if (window.trigger3DWarp) window.trigger3DWarp();
+  await sleep(420);
+
+  // 2. Fire the Boom shockwave ring + flash
+  const fx = $("boom-fx");
+  fx.classList.remove("fire");
+  void fx.offsetWidth; // restart animation cleanly
+  fx.classList.add("fire");
+
+  // 3. Swap interfaces and pop-boom the dashboard open
+  $("auth").hidden = true;
+  $("auth").classList.remove("compressing");
+  $("app").hidden = false;
+  $("app").classList.remove("boom-in");
+  void $("app").offsetWidth;
+  $("app").classList.add("boom-in");
+
+  $("out").hidden = false;
+  $("who").hidden = false;
+
+  const name = displayName(user);
+  $("who").textContent = name;
+  $("dash-user").textContent = name;
+  loadGallery();
+
+  await sleep(620);
+  $("app").classList.remove("boom-in");
+  fx.classList.remove("fire");
+  transitioning = false;
 }
 
 async function submitAuth() {
@@ -994,11 +1126,14 @@ async function submitAuth() {
   }
 
   user = res.data.user;
-  render();
+  say("authmsg", "");
+  playCompressBoomToApp();
 }
 
 function render() {
+  if (transitioning) return;
   const loggedIn = !!user;
+  $("auth").classList.remove("compressing");
   $("auth").hidden = loggedIn;
   $("app").hidden = !loggedIn;
   $("out").hidden = !loggedIn;
@@ -1059,7 +1194,8 @@ $("modal").onclick = e => { if (e.target.id === "modal") $("modal").hidden = tru
       render();
     } else if (session && session.user && (!user || user.id !== session.user.id)) {
       user = session.user;
-      render();
+      if (!$("auth").hidden) playCompressBoomToApp();
+      else render();
     }
   });
 })();
