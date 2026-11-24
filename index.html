@@ -3,109 +3,174 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DEVELOPMENT of STEM EDUCATION TRAINER KITS “SEE”</title>
+<title>3D Circuit Vision — SEE Project</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --mask:#0B2239;      /* Dark blue (header, Sign in button, borders) */
-  --mask-dk:#071626;   /* Deeper navy (labels, user badge) */
-  --gold:#7CC4FA;      /* Light blue accent stripe & badge */
-  --silk:#E8F4FF;      /* Blue-white (cards, panels, Register button) */
-  --board:#0B2239;     /* Fallback page background */
-  --ink:#0A1929;       /* Dark navy text */
-  --muted:#47637F;     /* Muted blue-grey text */
-  --line:#99CEFF;      /* Soft blue borders & dividers */
-  --err:#B91C1C;
-  --ok:#0F766E;
-  --series:#D97706;
-  --parallel:#0284C7;
+  --mask:#0B2239;      /* Deep navy foundation */
+  --mask-dk:#051321;   /* Absolue background shadow */
+  --gold:#38BDF8;      /* Cyber neon cyan-blue highlight */
+  --glow:#2563EB;      /* 3D Blue ambient emitter */
+  --silk:#E8F4FF;      /* High-contrast blue-white foreground */
+  --board:#070F19;     /* Deep holographic viewport background */
+  --ink:#0F253C;       /* Dark text */
+  --muted:#4A6B8F;     /* Medium sci-fi support shade */
+  --line:#326295;      /* Dimensional circuit divider */
+  --err:#EF4444;       /* Neon hazard */
+  --ok:#10B981;        /* System OK */
+  --series:#F59E0B;    /* Series glow (Amber) */
+  --parallel:#06B6D4;  /* Parallel glow (Electric Blue) */
   box-sizing:border-box;
 }
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
 body{
-  margin:0; color:var(--ink);
+  margin:0; background:var(--board); color:var(--silk);
   font:500 16px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
-  background: var(--board) url("bg1.jpg") center / cover fixed no-repeat;
-  min-height:100vh;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(29, 78, 216, 0.15) 0%, transparent 80%),
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 100% 100%, 36px 36px, 36px 36px;
+  background-attachment: fixed;
+  perspective: 1000px;
+  overflow-x: hidden;
 }
-
-/* Header with Credits (Left), Project Title (Center), Account Actions (Right) */
 header{
-  background:var(--mask); color:var(--silk);
-  display:flex; align-items:center; justify-content:space-between;
-  gap:18px; padding:12px clamp(16px,3vw,32px);
-  border-bottom:4px solid var(--gold); flex-wrap:wrap;
+  background: linear-gradient(180deg, var(--mask) 0%, rgba(11,34,57,0.85) 100%);
+  color:var(--silk); display:flex; align-items:center;
+  gap:14px; padding:16px clamp(16px,4vw,40px); 
+  border-bottom: 3px solid var(--gold);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  position: relative; z-index: 10;
 }
-.header-credits{
-  font-size:.86rem; line-height:1.35;
-  background:var(--mask-dk); border:1px solid rgba(124,196,250,.35);
-  padding:6px 12px; border-radius:4px;
-}
-.header-credits .lbl{
-  color:var(--gold); font-weight:700; text-transform:uppercase;
-  letter-spacing:.03em; margin-right:4px;
-}
-.header-title{
-  flex:1; display:flex; align-items:center; justify-content:center;
-  gap:10px; flex-wrap:wrap; text-align:center;
-}
-.header-title h1{
-  margin:0; font-size:clamp(1.1rem,1.8vw,1.45rem);
-  font-weight:700; letter-spacing:.02em; color:#FFFFFF;
-}
-.model-tag{
-  font-size:.78rem; font-weight:700; background:var(--gold); color:var(--ink);
-  padding:2px 8px; border-radius:3px; white-space:nowrap;
-}
-.header-actions{
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+header h1{
+  margin:0; font-family: 'Orbitron', sans-serif; font-size:1.5rem; font-weight:900; 
+  letter-spacing:.05em; flex:1; text-transform: uppercase;
+  background: linear-gradient(90deg, #FFFFFF 0%, var(--gold) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(56, 189, 248, 0.5));
 }
 header .user-badge{
-  font-size:.9rem; background:var(--mask-dk); border:1px solid rgba(124,196,250,.45);
-  padding:5px 10px; border-radius:4px; color:var(--silk);
+  font-size:.95rem; background:rgba(5, 19, 33, 0.75); border:1px solid rgba(124, 196, 250, 0.3);
+  padding:6px 12px; border-radius:4px; font-weight: 600;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+main{max-width:1240px; margin:0 auto; padding:clamp(20px,4vw,40px)}
+
+/* Dimensional 3D Cards */
+.panel{
+  background: rgba(11, 34, 57, 0.65); 
+  border: 1px solid var(--line); 
+  border-radius: 8px; 
+  padding: 24px;
+  backdrop-filter: blur(12px);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255,255,255,0.15),
+    0 0 0 1px rgba(56, 189, 248, 0.05);
+  transform: translateZ(0);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.panel:hover{
+  transform: translateY(-2px) translateZ(10px);
+  box-shadow: 
+    0 24px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255,255,255,0.25),
+    0 0 15px rgba(56, 189, 248, 0.15);
 }
 
-main{max-width:1200px; margin:0 auto; padding:clamp(16px,3vw,32px)}
+/* Authentic Hardware Buttons */
 button{
-  font:inherit; font-weight:600; border:2px solid var(--mask);
-  background:var(--silk); color:var(--mask); padding:9px 15px; border-radius:4px; cursor:pointer;
+  font:inherit; font-family: 'Orbitron', sans-serif; font-weight:700; 
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #1E2E42 0%, #0B1929 100%); 
+  color: var(--silk); 
+  padding: 10px 20px; 
+  border-radius: 6px; 
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.15s ease-in-out;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
-button.primary{background:var(--mask); color:var(--silk)}
-button.gold{background:var(--gold); border-color:var(--gold); color:var(--ink)}
-button.danger{border-color:var(--err); color:var(--err); padding:5px 10px; font-size:.85rem}
-button.sm{padding:5px 10px; font-size:.85rem}
-button:hover:not(:disabled){filter:brightness(1.06)}
-button:disabled{opacity:.45; cursor:not-allowed}
-:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+button.primary{
+  background: linear-gradient(180deg, #1D4ED8 0%, #1E3A8A 100%);
+  border-color: #3B82F6;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+button.gold{
+  background: linear-gradient(180deg, var(--gold) 0%, #0369A1 100%);
+  border-color: #7DD3FC;
+  color: #051321;
+  text-shadow: none;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+button.danger{
+  border-color: #EF4444; 
+  background: linear-gradient(180deg, #7F1D1D 0%, #450A0A 100%);
+  color: #FCA5A5;
+}
+button:hover:not(:disabled){
+  filter: brightness(1.15) contrast(1.05);
+  transform: translateY(-1px);
+}
+button:active:not(:disabled){
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+button:disabled{opacity:.35; cursor:not-allowed}
+
 input{
-  font:inherit; width:100%; padding:9px 11px; border:2px solid var(--line);
-  border-radius:4px; background:#F4FAFF; color:var(--ink);
+  font:inherit; width:100%; padding:12px; 
+  border:1px solid var(--line);
+  border-radius:6px; 
+  background: rgba(5, 19, 33, 0.85); 
+  color: var(--silk);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
 }
-label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:var(--mask-dk)}
-.panel{background:var(--silk); border:2px solid var(--mask); border-radius:4px; padding:18px}
-
-/* Auth Card */
-#auth{
-  max-width:720px; width:92%; min-height:460px;
-  margin:5vh auto; padding:36px 42px;
-  display:grid; gap:20px; align-content:center;
+input:focus{
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 0 8px rgba(56, 189, 248, 0.3);
 }
-#auth label{font-size:1.1rem; margin-bottom:6px}
-#auth input{padding:14px 16px; font-size:1.1rem}
-#auth button{padding:14px 20px; font-size:1.15rem}
-.tabs{display:grid; grid-template-columns:1fr 1fr; gap:14px}
-.tabs button.active{background:var(--mask); color:var(--silk)}
-#authmsg,#msg{min-height:1.4em; margin:0; font-size:1rem}
+label{
+  display:block; font-family: 'Orbitron', sans-serif; font-size:.8rem; 
+  font-weight:700; margin-bottom:6px; color:var(--gold); text-transform: uppercase;
+}
 
-/* Dashboard Layout */
-.layout{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; align-items:start}
+/* Auth Card Layout */
+#auth{max-width:440px; margin:10vh auto; display:grid; gap:20px}
+.tabs{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.tabs button{background: transparent; border: 1px solid var(--line)}
+.tabs button.active{
+  background: var(--line); color: var(--silk);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+#authmsg,#msg{min-height:1.4em; margin:0; font-size:.95rem; font-weight: 600}
+
+/* Holographic Viewport & Dashboard Layout */
+.layout{display:grid; grid-template-columns:minmax(0,1fr) 350px; gap:30px; align-items:start}
 .stage{
-  position:relative; background:#050B0A; border:2px solid var(--mask);
-  border-radius:4px; aspect-ratio:16/9; overflow:hidden;
+  position:relative; background:#02060D; border: 3px solid var(--line);
+  border-radius:12px; aspect-ratio:16/9; overflow:hidden;
+  box-shadow: 
+    0 0 30px rgba(0, 0, 0, 0.8),
+    inset 0 0 50px rgba(37, 99, 235, 0.2);
+}
+.stage::after{
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none; z-index: 4; opacity: 0.45;
 }
 .stage video,.stage canvas,.stage img.preview{
   position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
@@ -113,96 +178,113 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 .idle{
   position:absolute; inset:0; display:grid; place-items:center;
   color:#9FB5AE; text-align:center; padding:24px; pointer-events:none;
+  background: rgba(7, 15, 25, 0.85); z-index: 3;
 }
-#status{margin:8px 2px 0; color:var(--silk); font-variant-numeric:tabular-nums; text-shadow:0 1px 2px rgba(0,0,0,.6)}
-.row{display:flex; gap:10px; flex-wrap:wrap}
+#status{
+  margin:12px 2px 0; color:var(--muted); font-family: 'Orbitron', sans-serif; 
+  font-size: 0.85rem; font-variant-numeric:tabular-nums; text-transform: uppercase;
+}
+.row{display:flex; gap:12px; flex-wrap:wrap}
 .row>*{flex:1}
-.rail{display:grid; gap:14px}
-.rail h2,.gal h2{margin:0 0 8px; font-size:1.1rem}
-.gal h2{color:var(--silk); text-shadow:0 1px 3px rgba(0,0,0,.65)}
+.rail{display:grid; gap:20px}
+.rail h2,.gal h2{
+  margin:0 0 14px; font-family: 'Orbitron', sans-serif; font-weight: 700;
+  font-size:1.15rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.05em;
+}
 
-/* Circuit Topology Verdict Banner */
+/* Glowing Topography Verdict Panel */
 .circuit-box{
-  border:2px solid var(--line); border-radius:4px; padding:12px 14px;
-  background:#F4FAFF; margin-bottom:12px; transition:border-color .2s, background .2s;
+  border: 1px solid var(--line); border-radius:6px; padding:16px;
+  background: rgba(5, 19, 33, 0.7); margin-bottom:16px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .circuit-box .eyebrow{
-  font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  font-family: 'Orbitron', sans-serif; font-size:.7rem; font-weight:700; 
+  letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
 }
 .circuit-box .verdict{
-  font-size:1.45rem; font-weight:700; line-height:1.15; margin:3px 0 4px; color:var(--ink);
+  font-family: 'Orbitron', sans-serif; font-size:1.4rem; font-weight:900; 
+  line-height:1.2; margin:6px 0 6px; color:#F8FAFC;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
-.circuit-box .detail{font-size:.88rem; color:var(--muted)}
-.circuit-box.series{border-color:var(--series); background:#FFFBEB}
-.circuit-box.series .verdict{color:#B45309}
-.circuit-box.parallel{border-color:var(--parallel); background:#F0F9FF}
-.circuit-box.parallel .verdict{color:#0369A1}
+.circuit-box .detail{font-size:.85rem; color:var(--muted); line-height: 1.3}
+.circuit-box.series{
+  border-color: var(--series); 
+  background: radial-gradient(circle at top right, rgba(217, 119, 6, 0.15), rgba(5, 19, 33, 0.75));
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 0 15px rgba(217, 119, 6, 0.15);
+}
+.circuit-box.series .verdict{color:var(--series); text-shadow: 0 0 8px rgba(217, 119, 6, 0.4)}
+.circuit-box.parallel{
+  border-color: var(--parallel); 
+  background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.15), rgba(5, 19, 33, 0.75));
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 0 15px rgba(6, 182, 212, 0.15);
+}
+.circuit-box.parallel .verdict{color:var(--parallel); text-shadow: 0 0 8px rgba(6, 182, 212, 0.4)}
 
 .pill{
-  display:inline-block; padding:2px 8px; border-radius:3px;
-  font-size:.78rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+  display:inline-block; padding:3px 8px; border-radius:3px;
+  font-family: 'Orbitron', sans-serif; font-size:.7rem; font-weight:700; 
+  letter-spacing:.05em; text-transform:uppercase;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
 }
-.pill.series{background:#FEF3C7; color:#92400E; border:1px solid #F59E0B}
-.pill.parallel{background:#E0F2FE; color:#075985; border:1px solid #0284C7}
-.pill.unknown{background:#DCE9F5; color:var(--muted); border:1px solid var(--line)}
+.pill.series{background: rgba(217, 119, 6, 0.2); color:var(--series); border:1px solid var(--series)}
+.pill.parallel{background: rgba(6, 182, 212, 0.2); color:var(--parallel); border:1px solid var(--parallel)}
+.pill.unknown{background: rgba(74, 107, 143, 0.15); color:var(--muted); border:1px solid var(--line)}
 
-.meta-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px}
-.stat{background:#F4FAFF; border:1px solid var(--line); border-radius:4px; padding:8px 10px}
-.stat span{display:block; font-size:.8rem; color:var(--muted)}
-.stat strong{font-size:1.15rem; color:var(--mask)}
+.meta-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px}
+.stat{background: rgba(5, 19, 33, 0.5); border:1px solid var(--line); border-radius:6px; padding:10px 14px}
+.stat span{display:block; font-size:.75rem; color:var(--muted); text-transform: uppercase; font-family: 'Orbitron', sans-serif}
+.stat strong{font-size:1.1rem; color: var(--silk); display:block; margin-top:2px}
 
-#dets{list-style:none; margin:0; padding:0; display:grid; gap:6px}
-#dets li{display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--line)}
-#dets i{width:12px; height:12px; border-radius:2px; flex:none}
-#dets .acc{margin-left:auto; font-variant-numeric:tabular-nums; font-weight:700; color:var(--mask)}
+#dets{list-style:none; margin:0; padding:0; display:grid; gap:8px}
+#dets li{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(50, 98, 149, 0.3)}
+#dets i{width:12px; height:12px; border-radius:2px; flex:none; box-shadow: 0 0 6px currentColor}
+#dets .acc{margin-left:auto; font-variant-numeric:tabular-nums; font-weight:700; color:var(--gold)}
 .muted{color:var(--muted)}
 
-/* History Gallery */
-.gal{margin-top:28px}
-.gal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
-#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px}
+/* Interactive Gallery */
+.gal{margin-top:40px}
+.gal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px}
+#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px}
 figure{
-  margin:0; background:var(--silk); border:2px solid var(--mask);
-  border-radius:4px; overflow:hidden; display:flex; flex-direction:column;
+  margin:0; background: rgba(11, 34, 57, 0.5); border: 1px solid var(--line);
+  border-radius:8px; overflow:hidden; display:flex; flex-direction:column;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  transition: transform 0.2s, border-color 0.2s;
 }
-figure img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; background:#050B0A; cursor:pointer}
-figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
-.cap-actions{display:flex; gap:6px; margin-top:auto}
+figure:hover{
+  transform: translateY(-2px);
+  border-color: var(--gold);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 10px rgba(56,189,248,0.1);
+}
+figure img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; background:#02060D; cursor:pointer}
+figcaption{padding:14px; font-size:.9rem; display:grid; gap:8px; flex:1}
+.cap-actions{display:flex; gap:8px; margin-top:auto}
 .cap-actions a,.cap-actions button{flex:1; text-align:center; text-decoration:none}
 
 /* Lightbox Modal */
 #modal{
-  position:fixed; inset:0; background:rgba(5,11,10,.86); display:grid;
-  place-items:center; padding:20px; z-index:50;
+  position:fixed; inset:0; background:rgba(2,6,13,0.92); display:grid;
+  place-items:center; padding:20px; z-index:100;
+  backdrop-filter: blur(8px);
 }
 #modal .box{
-  background:var(--silk); border:2px solid var(--gold); border-radius:6px;
-  max-width:900px; width:100%; overflow:hidden;
+  background: var(--mask); border: 2px solid var(--gold); border-radius:12px;
+  max-width:960px; width:100%; overflow:hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(56, 189, 248, 0.25);
 }
-#modal img{display:block; width:100%; max-height:72vh; object-fit:contain; background:#050B0A}
-#modal .bar{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; gap:12px}
+#modal img{display:block; width:100%; max-height:72vh; object-fit:contain; background:#02060D}
+#modal .bar{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; gap:12px}
 
-@media(max-width:960px){
-  header{justify-content:center}
-  .header-credits{width:100%; text-align:center}
-}
 @media(max-width:860px){.layout{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
-  <div class="header-credits">
-    <div><span class="lbl">Developer:</span> MUHAMMAD BADRUL HAKIM BIN MOHD AZMI</div>
-    <div><span class="lbl">Supervisor:</span> DR. HASLINAH BINTI MOHD NASIR</div>
-  </div>
-  <div class="header-title">
-    <h1>DEVELOPMENT of STEM EDUCATION TRAINER KITS &ldquo;SEE&rdquo;</h1>
-    <span class="model-tag">YOLO26 v7</span>
-  </div>
-  <div class="header-actions">
-    <span id="who" class="user-badge" hidden></span>
-    <button id="out" type="button" hidden>Sign out</button>
-  </div>
+  <h1>Circuit Scanner</h1>
+  <span id="who" class="user-badge" hidden></span>
+  <button id="out" type="button" hidden>Sign out</button>
 </header>
 
 <main>
@@ -242,7 +324,7 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
       </div>
 
       <div class="rail">
-        <div class="panel" style="display:grid;gap:10px">
+        <div class="panel" style="display:grid;gap:12px">
           <div class="row">
             <button id="start" type="button" class="primary">Start camera</button>
             <button id="snap" type="button" class="gold" disabled>Snap result</button>
@@ -267,7 +349,7 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
           <div class="meta-grid">
             <div class="stat">
               <span>Account</span>
-              <strong id="dash-user" style="font-size:.95rem;word-break:break-word">—</strong>
+              <strong id="dash-user" style="font-size:.95rem;word-break:break-all">—</strong>
             </div>
             <div class="stat">
               <span>Avg Accuracy</span>
@@ -303,7 +385,6 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 <script>
 /* ---------- CONFIG ---------- */
 const CFG = {
-  MODEL_ID: "badrul-hakim/see-project-7-yolo26n-t1",
   CONFIDENCE: 0.4,
   SUPABASE_URL: "https://svctekpjvcwiusphpsqx.supabase.co",
   SUPABASE_KEY: "sb_publishable_kFROD88dmBeXvfmsfEdcMA_ltP00D3o",
@@ -317,7 +398,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const color = c => { let h = 0; for (const ch of c) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 85% 60%)`; };
 const say = (el, t, type = "") => {
   $(el).textContent = t;
-  $(el).style.color = type === "err" ? "var(--err)" : (type === "ok" ? "var(--ok)" : (el === "status" ? "var(--silk)" : "var(--muted)"));
+  $(el).style.color = type === "err" ? "var(--err)" : (type === "ok" ? "var(--ok)" : "var(--muted)");
 };
 
 const sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY, {
@@ -392,9 +473,17 @@ function classifyCircuit(preds, imgW, imgH) {
     const minW = Math.max(1, Math.min(a.w, b.w));
 
     if (overlapX > 0.4 * minW || dy > dx * 1.15) {
-      return { kind: "parallel", label: "PARALLEL CIRCUIT", detail: `2 parallel branches (${summary})` };
+      return {
+        kind: "parallel",
+        label: "PARALLEL CIRCUIT",
+        detail: `2 parallel branches (${summary})`
+      };
     }
-    return { kind: "series", label: "SERIES CIRCUIT", detail: `End-to-end chain (${summary})` };
+    return {
+      kind: "series",
+      label: "SERIES CIRCUIT",
+      detail: `End-to-end chain (${summary})`
+    };
   }
 
   const byX = [...comps].sort((a, b) => a.cx - b.cx);
@@ -410,7 +499,11 @@ function classifyCircuit(preds, imgW, imgH) {
   }
 
   if (!hasParallelStack) {
-    return { kind: "series", label: "SERIES CIRCUIT", detail: `${comps.length} components in series (${summary})` };
+    return {
+      kind: "series",
+      label: "SERIES CIRCUIT",
+      detail: `${comps.length} components in series (${summary})`
+    };
   }
 
   const byY = [...comps].sort((a, b) => a.cy - b.cy);
@@ -425,19 +518,26 @@ function classifyCircuit(preds, imgW, imgH) {
     }
   }
 
-  return { kind: "parallel", label: "PARALLEL CIRCUIT", detail: `${rows.length} parallel branches (${summary})` };
+  return {
+    kind: "parallel",
+    label: "PARALLEL CIRCUIT",
+    detail: `${rows.length} parallel branches (${summary})`
+  };
 }
 
 /* ---------- DRAWING & DASHBOARD ---------- */
 function drawBoxes(c, preds, sx, sy, circuit) {
   const s = Math.max(1, c.canvas.width / 640);
 
+  // Connection overlay line with glow effect
   if (preds.length >= 2 && (circuit.kind === "series" || circuit.kind === "parallel")) {
     const sorted = [...preds].sort((a, b) => circuit.kind === "series" ? a.x - b.x : a.y - b.y);
     c.save();
-    c.strokeStyle = circuit.kind === "series" ? "rgba(245,158,11,0.85)" : "rgba(2,132,199,0.85)";
-    c.lineWidth = 2.5 * s;
-    c.setLineDash([6 * s, 5 * s]);
+    c.strokeStyle = circuit.kind === "series" ? "rgba(245,158,11,0.9)" : "rgba(6,182,212,0.9)";
+    c.shadowColor = circuit.kind === "series" ? "rgba(245,158,11,0.6)" : "rgba(6,182,212,0.6)";
+    c.shadowBlur = 8 * s;
+    c.lineWidth = 3 * s;
+    c.setLineDash([8 * s, 6 * s]);
     c.beginPath();
     sorted.forEach((p, idx) => {
       const px = p.x * sx, py = p.y * sy;
@@ -456,6 +556,8 @@ function drawBoxes(c, preds, sx, sy, circuit) {
     const w = p.width * sx;
     const h = p.height * sy;
     const col = color(p.class);
+    
+    // Transparent neon boundary
     c.strokeStyle = col;
     c.strokeRect(x, y, w, h);
     const label = `${p.class} ${Math.round(p.confidence * 100)}%`;
@@ -464,20 +566,21 @@ function drawBoxes(c, preds, sx, sy, circuit) {
     const ty = y - th < 0 ? y : y - th;
     c.fillStyle = col;
     c.fillRect(x, ty, tw, th);
-    c.fillStyle = "#0A1929";
+    c.fillStyle = "#0B1929";
     c.fillText(label, x + 5 * s, ty + th / 2);
   }
 
+  // Neon Verdict Overlay on Camera Stream
   if (circuit && circuit.kind !== "unknown") {
-    const badgeBg = circuit.kind === "series" ? "rgba(217,119,6,0.92)" : "rgba(2,132,199,0.92)";
+    const badgeBg = circuit.kind === "series" ? "rgba(245,158,11,0.9)" : "rgba(6,182,212,0.9)";
     const text = `CIRCUIT: ${circuit.label}`;
-    c.font = `700 ${16 * s}px "Barlow Semi Condensed",sans-serif`;
-    const tw = c.measureText(text).width + 20 * s;
-    const th = 28 * s;
+    c.font = `700 ${16 * s}px "Orbitron",sans-serif`;
+    const tw = c.measureText(text).width + 24 * s;
+    const th = 32 * s;
     c.fillStyle = badgeBg;
-    c.fillRect(10 * s, 10 * s, tw, th);
+    c.fillRect(12 * s, 12 * s, tw, th);
     c.fillStyle = "#FFFFFF";
-    c.fillText(text, 20 * s, 10 * s + th / 2);
+    c.fillText(text, 22 * s, 12 * s + th / 2);
   }
 }
 
@@ -520,7 +623,7 @@ function paint() {
 /* ---------- ROBOFLOW INFERENCE (VIA SUPABASE PROXY) ---------- */
 async function inferBase64(b64, fallbackW, fallbackH) {
   const { data, error } = await sb.functions.invoke("roboflow-proxy", {
-    body: { image: b64, confidence: CFG.CONFIDENCE, model: CFG.MODEL_ID }
+    body: { image: b64, confidence: CFG.CONFIDENCE }
   });
   if (error) throw new Error(error.message);
   return {
@@ -679,9 +782,9 @@ async function snap() {
   drawBoxes(x, preds, w / last.w, h / last.h, circuit);
 
   const barH = Math.max(30, Math.round(h * 0.058));
-  x.fillStyle = "rgba(11,34,57,0.88)";
+  x.fillStyle = "rgba(11,34,57,0.92)";
   x.fillRect(0, h - barH, w, barH);
-  x.fillStyle = "#E8F4FF";
+  x.fillStyle = "#F4F6F2";
   x.font = `600 ${Math.round(barH * 0.54)}px "Barlow Semi Condensed",sans-serif`;
   x.textBaseline = "middle";
   x.fillText(`PROOF · ${circuit.label} · ${displayName(user)} · ${new Date().toLocaleString()}`, 12, h - barH / 2);
@@ -720,7 +823,7 @@ async function snap() {
 /* ---------- HISTORY GALLERY ---------- */
 async function loadGallery() {
   if (!user) return;
-  $("gallery").innerHTML = '<p class="muted" style="color:var(--silk)">Loading history…</p>';
+  $("gallery").innerHTML = '<p class="muted">Loading history…</p>';
 
   const { data, error } = await sb
     .from("snaps")
@@ -729,11 +832,11 @@ async function loadGallery() {
     .limit(24);
 
   if (error) {
-    $("gallery").innerHTML = `<p style="color:#FCA5A5">Could not load history: ${esc(error.message)}</p>`;
+    $("gallery").innerHTML = `<p style="color:var(--err)">Could not load history: ${esc(error.message)}</p>`;
     return;
   }
   if (!data || !data.length) {
-    $("gallery").innerHTML = '<p style="color:var(--silk)">No snaps saved yet. Click <strong>Snap result</strong> to save proof here.</p>';
+    $("gallery").innerHTML = '<p class="muted">No snaps saved yet. Click <strong>Snap result</strong> to save proof here.</p>';
     return;
   }
 
@@ -742,7 +845,7 @@ async function loadGallery() {
     .createSignedUrls(data.map(d => d.image_path), 3600);
 
   if (urlErr) {
-    $("gallery").innerHTML = `<p style="color:#FCA5A5">Could not load images: ${esc(urlErr.message)}</p>`;
+    $("gallery").innerHTML = `<p style="color:var(--err)">Could not load images: ${esc(urlErr.message)}</p>`;
     return;
   }
 
@@ -763,7 +866,7 @@ async function loadGallery() {
           <div><strong>${esc(stamp)}</strong></div>
           <div class="muted">${esc(kinds)} · Avg: <strong>${avg}</strong></div>
           <div class="cap-actions">
-            <a href="${imgUrl}" download="circuit-proof-${d.id.slice(0,8)}.jpg" class="sm" style="border:2px solid var(--mask);border-radius:4px;color:var(--mask);font-weight:600;padding:4px 8px">Download</a>
+            <a href="${imgUrl}" download="circuit-proof-${d.id.slice(0,8)}.jpg" class="sm" style="border:2px solid var(--line);border-radius:4px;color:var(--silk);font-weight:600;padding:4px 8px">Download</a>
             <button type="button" class="danger" data-del-id="${d.id}" data-del-path="${esc(d.image_path)}">Delete</button>
           </div>
         </figcaption>
