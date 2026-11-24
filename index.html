@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Circuit Scanner v7 — SEE Project</title>
+<title>DEVELOPMENT of STEM EDUCATION TRAINER KITS “SEE”</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 :root{
   --mask:#0B2239;      /* Dark blue (header, Sign in button, borders) */
   --mask-dk:#071626;   /* Deeper navy (labels, user badge) */
-  --gold:#7CC4FA;      /* Light blue accent stripe & badge (or keep #C8A24A for gold) */
+  --gold:#7CC4FA;      /* Light blue accent stripe & badge */
   --silk:#E8F4FF;      /* Blue-white (cards, panels, Register button) */
   --board:#0B2239;     /* Fallback page background */
   --ink:#0A1929;       /* Dark navy text */
@@ -29,23 +29,47 @@
 body{
   margin:0; color:var(--ink);
   font:500 16px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;
-  background: var(--board) url("bg1.jpg") center / cover fixed no-repeat;
+  background: var(--board) url("bg.jpg") center / cover fixed no-repeat;
   min-height:100vh;
 }
+
+/* Header with Credits (Left), Project Title (Center), Account Actions (Right) */
 header{
-  background:var(--mask); color:var(--silk); display:flex; align-items:center;
-  gap:14px; padding:12px clamp(16px,4vw,40px); border-bottom:4px solid var(--gold); flex-wrap:wrap;
+  background:var(--mask); color:var(--silk);
+  display:flex; align-items:center; justify-content:space-between;
+  gap:18px; padding:12px clamp(16px,3vw,32px);
+  border-bottom:4px solid var(--gold); flex-wrap:wrap;
 }
-header h1{margin:0; font-size:1.75rem; font-weight:700; letter-spacing:.01em; flex:1}
-header .model-tag{
-  font-size:.82rem; font-weight:700; background:var(--gold); color:var(--ink);
-  padding:2px 8px; border-radius:3px; vertical-align:middle; margin-left:8px;
+.header-credits{
+  font-size:.86rem; line-height:1.35;
+  background:var(--mask-dk); border:1px solid rgba(124,196,250,.35);
+  padding:6px 12px; border-radius:4px;
+}
+.header-credits .lbl{
+  color:var(--gold); font-weight:700; text-transform:uppercase;
+  letter-spacing:.03em; margin-right:4px;
+}
+.header-title{
+  flex:1; display:flex; align-items:center; justify-content:center;
+  gap:10px; flex-wrap:wrap; text-align:center;
+}
+.header-title h1{
+  margin:0; font-size:clamp(1.1rem,1.8vw,1.45rem);
+  font-weight:700; letter-spacing:.02em; color:#FFFFFF;
+}
+.model-tag{
+  font-size:.78rem; font-weight:700; background:var(--gold); color:var(--ink);
+  padding:2px 8px; border-radius:3px; white-space:nowrap;
+}
+.header-actions{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
 }
 header .user-badge{
-  font-size:.95rem; background:var(--mask-dk); border:1px solid rgba(200,162,74,.45);
-  padding:4px 10px; border-radius:4px;
+  font-size:.9rem; background:var(--mask-dk); border:1px solid rgba(124,196,250,.45);
+  padding:5px 10px; border-radius:4px; color:var(--silk);
 }
-main{max-width:1400px; margin:0 auto; padding:clamp(16px,3vw,32px)}
+
+main{max-width:1200px; margin:0 auto; padding:clamp(16px,3vw,32px)}
 button{
   font:inherit; font-weight:600; border:2px solid var(--mask);
   background:var(--silk); color:var(--mask); padding:9px 15px; border-radius:4px; cursor:pointer;
@@ -66,14 +90,9 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 
 /* Auth Card */
 #auth{
-  max-width:720px;
-  width:92%;
-  min-height:460px;
-  margin:5vh auto;
-  padding:36px 42px;
-  display:grid;
-  gap:20px;
-  align-content:center;
+  max-width:720px; width:92%; min-height:460px;
+  margin:5vh auto; padding:36px 42px;
+  display:grid; gap:20px; align-content:center;
 }
 #auth label{font-size:1.1rem; margin-bottom:6px}
 #auth input{padding:14px 16px; font-size:1.1rem}
@@ -83,7 +102,7 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 #authmsg,#msg{min-height:1.4em; margin:0; font-size:1rem}
 
 /* Dashboard Layout */
-.layout{display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:20px; align-items:start}
+.layout{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; align-items:start}
 .stage{
   position:relative; background:#050B0A; border:2px solid var(--mask);
   border-radius:4px; aspect-ratio:16/9; overflow:hidden;
@@ -95,39 +114,40 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
   position:absolute; inset:0; display:grid; place-items:center;
   color:#9FB5AE; text-align:center; padding:24px; pointer-events:none;
 }
-#status{margin:8px 2px 0; color:var(--muted); font-variant-numeric:tabular-nums}
+#status{margin:8px 2px 0; color:var(--silk); font-variant-numeric:tabular-nums; text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .row{display:flex; gap:10px; flex-wrap:wrap}
 .row>*{flex:1}
 .rail{display:grid; gap:14px}
 .rail h2,.gal h2{margin:0 0 8px; font-size:1.1rem}
+.gal h2{color:var(--silk); text-shadow:0 1px 3px rgba(0,0,0,.65)}
 
 /* Circuit Topology Verdict Banner */
 .circuit-box{
   border:2px solid var(--line); border-radius:4px; padding:12px 14px;
-  background:#fff; margin-bottom:12px; transition:border-color .2s, background .2s;
+  background:#F4FAFF; margin-bottom:12px; transition:border-color .2s, background .2s;
 }
 .circuit-box .eyebrow{
   font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
 }
 .circuit-box .verdict{
-  font-size:1.9rem; font-weight:700; line-height:1.15; margin:3px 0 4px; color:var(--ink);
+  font-size:1.45rem; font-weight:700; line-height:1.15; margin:3px 0 4px; color:var(--ink);
 }
 .circuit-box .detail{font-size:.88rem; color:var(--muted)}
 .circuit-box.series{border-color:var(--series); background:#FFFBEB}
 .circuit-box.series .verdict{color:#B45309}
-.circuit-box.parallel{border-color:var(--parallel); background:#F0FDFA}
-.circuit-box.parallel .verdict{color:#0F766E}
+.circuit-box.parallel{border-color:var(--parallel); background:#F0F9FF}
+.circuit-box.parallel .verdict{color:#0369A1}
 
 .pill{
   display:inline-block; padding:2px 8px; border-radius:3px;
   font-size:.78rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
 }
 .pill.series{background:#FEF3C7; color:#92400E; border:1px solid #F59E0B}
-.pill.parallel{background:#CCFBF1; color:#115E59; border:1px solid #14B8A6}
-.pill.unknown{background:#E5ECE8; color:var(--muted); border:1px solid var(--line)}
+.pill.parallel{background:#E0F2FE; color:#075985; border:1px solid #0284C7}
+.pill.unknown{background:#DCE9F5; color:var(--muted); border:1px solid var(--line)}
 
 .meta-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px}
-.stat{background:#fff; border:1px solid var(--line); border-radius:4px; padding:8px 10px}
+.stat{background:#F4FAFF; border:1px solid var(--line); border-radius:4px; padding:8px 10px}
 .stat span{display:block; font-size:.8rem; color:var(--muted)}
 .stat strong{font-size:1.15rem; color:var(--mask)}
 
@@ -140,12 +160,12 @@ label{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:
 /* History Gallery */
 .gal{margin-top:28px}
 .gal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
-#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px}
+#gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px}
 figure{
   margin:0; background:var(--silk); border:2px solid var(--mask);
   border-radius:4px; overflow:hidden; display:flex; flex-direction:column;
 }
-figure img{display:block; width:100%; aspect-ratio:4/3; object-fit:cover; background:#050B0A; cursor:pointer}
+figure img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; background:#050B0A; cursor:pointer}
 figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 .cap-actions{display:flex; gap:6px; margin-top:auto}
 .cap-actions a,.cap-actions button{flex:1; text-align:center; text-decoration:none}
@@ -162,14 +182,27 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 #modal img{display:block; width:100%; max-height:72vh; object-fit:contain; background:#050B0A}
 #modal .bar{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; gap:12px}
 
+@media(max-width:960px){
+  header{justify-content:center}
+  .header-credits{width:100%; text-align:center}
+}
 @media(max-width:860px){.layout{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
-  <h1>Circuit Scanner <span class="model-tag">YOLO26 v7</span></h1>
-  <span id="who" class="user-badge" hidden></span>
-  <button id="out" type="button" hidden>Sign out</button>
+  <div class="header-credits">
+    <div><span class="lbl">Developer:</span> MUHAMMAD BADRUL HAKIM BIN MOHD AZMI</div>
+    <div><span class="lbl">Supervisor:</span> DR. HASLINAH BINTI MOHD NASIR</div>
+  </div>
+  <div class="header-title">
+    <h1>DEVELOPMENT of STEM EDUCATION TRAINER KITS &ldquo;SEE&rdquo;</h1>
+    <span class="model-tag">YOLO26 v7</span>
+  </div>
+  <div class="header-actions">
+    <span id="who" class="user-badge" hidden></span>
+    <button id="out" type="button" hidden>Sign out</button>
+  </div>
 </header>
 
 <main>
@@ -284,7 +317,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const color = c => { let h = 0; for (const ch of c) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 85% 60%)`; };
 const say = (el, t, type = "") => {
   $(el).textContent = t;
-  $(el).style.color = type === "err" ? "var(--err)" : (type === "ok" ? "var(--ok)" : "var(--muted)");
+  $(el).style.color = type === "err" ? "var(--err)" : (type === "ok" ? "var(--ok)" : (el === "status" ? "var(--silk)" : "var(--muted)"));
 };
 
 const sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY, {
@@ -310,7 +343,6 @@ function classifyCircuit(preds, imgW, imgH) {
     return { kind: "unknown", label: "No Circuit Detected", detail: "Point camera at circuit components" };
   }
 
-  // 1. Direct label check (if model directly outputs 'series' or 'parallel' classes)
   const directSeries = preds.find(p => p.class.toLowerCase().includes("series"));
   const directParallel = preds.find(p => p.class.toLowerCase().includes("parallel"));
   if (directSeries && (!directParallel || directSeries.confidence >= directParallel.confidence)) {
@@ -328,7 +360,6 @@ function classifyCircuit(preds, imgW, imgH) {
     };
   }
 
-  // 2. Geometric topology check for >= 2 individual components
   if (preds.length < 2) {
     return {
       kind: "unknown",
@@ -404,7 +435,7 @@ function drawBoxes(c, preds, sx, sy, circuit) {
   if (preds.length >= 2 && (circuit.kind === "series" || circuit.kind === "parallel")) {
     const sorted = [...preds].sort((a, b) => circuit.kind === "series" ? a.x - b.x : a.y - b.y);
     c.save();
-    c.strokeStyle = circuit.kind === "series" ? "rgba(245,158,11,0.85)" : "rgba(20,184,166,0.85)";
+    c.strokeStyle = circuit.kind === "series" ? "rgba(245,158,11,0.85)" : "rgba(2,132,199,0.85)";
     c.lineWidth = 2.5 * s;
     c.setLineDash([6 * s, 5 * s]);
     c.beginPath();
@@ -433,12 +464,12 @@ function drawBoxes(c, preds, sx, sy, circuit) {
     const ty = y - th < 0 ? y : y - th;
     c.fillStyle = col;
     c.fillRect(x, ty, tw, th);
-    c.fillStyle = "#101B1A";
+    c.fillStyle = "#0A1929";
     c.fillText(label, x + 5 * s, ty + th / 2);
   }
 
   if (circuit && circuit.kind !== "unknown") {
-    const badgeBg = circuit.kind === "series" ? "rgba(217,119,6,0.92)" : "rgba(13,148,136,0.92)";
+    const badgeBg = circuit.kind === "series" ? "rgba(217,119,6,0.92)" : "rgba(2,132,199,0.92)";
     const text = `CIRCUIT: ${circuit.label}`;
     c.font = `700 ${16 * s}px "Barlow Semi Condensed",sans-serif`;
     const tw = c.measureText(text).width + 20 * s;
@@ -650,7 +681,7 @@ async function snap() {
   const barH = Math.max(30, Math.round(h * 0.058));
   x.fillStyle = "rgba(11,34,57,0.88)";
   x.fillRect(0, h - barH, w, barH);
-  x.fillStyle = "#F4F6F2";
+  x.fillStyle = "#E8F4FF";
   x.font = `600 ${Math.round(barH * 0.54)}px "Barlow Semi Condensed",sans-serif`;
   x.textBaseline = "middle";
   x.fillText(`PROOF · ${circuit.label} · ${displayName(user)} · ${new Date().toLocaleString()}`, 12, h - barH / 2);
@@ -689,7 +720,7 @@ async function snap() {
 /* ---------- HISTORY GALLERY ---------- */
 async function loadGallery() {
   if (!user) return;
-  $("gallery").innerHTML = '<p class="muted">Loading history…</p>';
+  $("gallery").innerHTML = '<p class="muted" style="color:var(--silk)">Loading history…</p>';
 
   const { data, error } = await sb
     .from("snaps")
@@ -698,11 +729,11 @@ async function loadGallery() {
     .limit(24);
 
   if (error) {
-    $("gallery").innerHTML = `<p style="color:var(--err)">Could not load history: ${esc(error.message)}</p>`;
+    $("gallery").innerHTML = `<p style="color:#FCA5A5">Could not load history: ${esc(error.message)}</p>`;
     return;
   }
   if (!data || !data.length) {
-    $("gallery").innerHTML = '<p class="muted">No snaps saved yet. Click <strong>Snap result</strong> to save proof here.</p>';
+    $("gallery").innerHTML = '<p style="color:var(--silk)">No snaps saved yet. Click <strong>Snap result</strong> to save proof here.</p>';
     return;
   }
 
@@ -711,7 +742,7 @@ async function loadGallery() {
     .createSignedUrls(data.map(d => d.image_path), 3600);
 
   if (urlErr) {
-    $("gallery").innerHTML = `<p style="color:var(--err)">Could not load images: ${esc(urlErr.message)}</p>`;
+    $("gallery").innerHTML = `<p style="color:#FCA5A5">Could not load images: ${esc(urlErr.message)}</p>`;
     return;
   }
 
