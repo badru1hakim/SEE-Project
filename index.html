@@ -138,24 +138,13 @@ header{
   box-shadow:0 8px 28px rgba(0, 0, 0, 0.45);
 }
 .header-credits{
-  display:grid; gap:6px;
-  font-size:.86rem; line-height:1.3;
+  font-size:.86rem; line-height:1.35;
   background:rgba(7, 22, 38, 0.85); border:1px solid rgba(124,196,250,.35);
-  padding:8px 12px; border-radius:6px;
-}
-.credit-row{
-  display:flex; align-items:center; gap:10px;
-}
-.credit-avatar{
-  width:34px; height:34px; border-radius:50%;
-  object-fit:cover; flex:none;
-  border:2px solid var(--gold);
-  background:var(--mask);
-  box-shadow:0 0 10px rgba(124,196,250,.35);
+  padding:6px 12px; border-radius:4px;
 }
 .header-credits .lbl{
   color:var(--gold); font-weight:700; text-transform:uppercase;
-  letter-spacing:.03em; margin-right:5px;
+  letter-spacing:.03em; margin-right:4px;
 }
 .header-title{
   flex:1; display:flex; align-items:center; justify-content:center;
@@ -316,17 +305,9 @@ figcaption{padding:10px; font-size:.9rem; display:grid; gap:6px; flex:1}
 </div>
 
 <header>
-<div class="header-credits">
-    <div class="credit-row">
-      <img class="credit-avatar" src="developer.jpg" alt="Developer"
-           onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 fill=%22%230B2239%22/><text x=%2232%22 y=%2239%22 font-family=%22sans-serif%22 font-size=%2222%22 font-weight=%22700%22 fill=%22%237CC4FA%22 text-anchor=%22middle%22>BH</text></svg>'">
-      <div><span class="lbl">Developer:</span> MUHAMMAD BADRUL HAKIM BIN MOHD AZMI</div>
-    </div>
-    <div class="credit-row">
-      <img class="credit-avatar" src="supervisor.jpg" alt="Supervisor"
-           onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 fill=%22%230B2239%22/><text x=%2232%22 y=%2239%22 font-family=%22sans-serif%22 font-size=%2222%22 font-weight=%22700%22 fill=%22%237CC4FA%22 text-anchor=%22middle%22>HN</text></svg>'">
-      <div><span class="lbl">Supervisor:</span> DR. HASLINAH BINTI MOHD NASIR</div>
-    </div>
+  <div class="header-credits">
+    <div><span class="lbl">Developer:</span> MUHAMMAD BADRUL HAKIM BIN MOHD AZMI</div>
+    <div><span class="lbl">Supervisor:</span> DR. HASLINAH BINTI MOHD NASIR</div>
   </div>
   <div class="header-title">
     <h1>DEVELOPMENT of STEM EDUCATION TRAINER KITS &ldquo;SEE&rdquo;</h1>
@@ -1088,7 +1069,7 @@ async function playCompressBoomToApp() {
   // 2. Fire the Boom shockwave ring + flash
   const fx = $("boom-fx");
   fx.classList.remove("fire");
-  void fx.offsetWidth; // restart animation cleanly
+  void fx.offsetWidth;
   fx.classList.add("fire");
 
   // 3. Swap interfaces and pop-boom the dashboard open
